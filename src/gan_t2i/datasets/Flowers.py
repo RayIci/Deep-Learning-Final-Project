@@ -2,6 +2,7 @@ import os
 from torch.utils.data import Dataset
 import numpy as np
 import torchfile
+import torch as torch
 
 from gan_t2i.utils.downloads import download_file, extract_tar_gz, download_file_from_google_drive
 from gan_t2i.utils.logger import info, success
@@ -103,7 +104,6 @@ class Flowers(Dataset):
 
                 for f_timg in os.listdir(class_folder):
                     timg_file = os.path.join(class_folder, f_timg)
-                    print(timg_file)
                     tens_file = torchfile.load(timg_file)
                     #TODO: FIXING LOADING OF TENSORS
                     
