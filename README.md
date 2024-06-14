@@ -17,3 +17,5 @@ With docker engine up and running execute the following command:
 ``` bash
     docker compose up --build
 ```
+
+## Project Structure
