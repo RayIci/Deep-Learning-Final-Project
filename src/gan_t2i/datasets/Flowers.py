@@ -23,24 +23,24 @@ class Flowers(Dataset):
         
         # Downloading functions
         def download_descriptions():
-            info("\n\nDownloading flowers dataset descriptions ...")
+            info("\n\nDownloading flowers data descriptions ...")
             if not os.path.exists(self.__DESCRIPTIONS_PATH):
                 os.makedirs(self.__DESCRIPTIONS_PATH)
             download_file_from_google_drive(
                 id=self.__GOOGLE_DRIVE_ID_DESCRIPTIONS, 
                 destination=os.path.join(self.__DESCRIPTIONS_PATH, f"{self.__DATASET_NAME}-desc.tar.gz"),
             )
-            success("\t=>Downloaded flowers dataset descriptions")
+            success("\t=>Downloaded flowers data descriptions")
             
         def download_images():
-            info("\n\nDownloading flowers dataset images ...")
+            info("\n\nDownloading flowers data images ...")
             if not os.path.exists(self.__IMAGES_PATH):
                 os.makedirs(self.__IMAGES_PATH)
             download_file(
                 url=self.__DOWNLOADING_PATH_IMAGES,
                 destination=os.path.join(self.__IMAGES_PATH, f"{self.__DATASET_NAME}-imags.tgz"),
             )
-            success("\t=>Downloaded flowers dataset images")
+            success("\t=>Downloaded flowers data images")
         
         
         # Actual dataset downlaoding
