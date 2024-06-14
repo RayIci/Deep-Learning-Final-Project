@@ -6,19 +6,17 @@ from tqdm import tqdm
 
 from gan_t2i.utils.logger import error, info, success
 
-def download_file_from_google_drive(id, destination):
+def download_file_from_google_drive(file_id, destination):
+    url = f'https://drive.google.com/uc?id={file_id}'
     try:
-        url = f'https://drive.google.com/uc?id={id}'
         gdown.download(url, destination, quiet=False)
     except Exception as e:
         error("Failed to download file")
-        print(e)
+        raise e
 
-
-def download_file(url, destination):
+def download_file(url, destination, params = None):
     try:
-        response = requests.get(url, stream=True)
-        
+        response = requests.get(url, params=params, stream=True)
     
         if response.status_code == 200:
             
@@ -32,13 +30,23 @@ def download_file(url, destination):
                 for chunk in response.iter_content(chunk_size=block_size):
                     file.write(chunk)
                     bar.update(len(chunk))
-
+            
+            if os.path.getsize(destination) == total_size:
+                print("Download completato con successo")
+                return
+            else:
+                print(f"Errore: la dimensione del file scaricato non corrisponde")
+                raise Exception("File download failed - file size mismatch")
         else:
             error(f"Failed to download file: status code {response.status_code}")
     except Exception as e:
         error("Failed to download file")
-        print(e)
+        raise e
         
 def extract_tar_gz(file_path, extract_path):
-    with tarfile.open(file_path, "r:gz") as tar:
-        tar.extractall(path=extract_path)
+    try:
+        with tarfile.open(file_path, "r:gz") as tar:
+            tar.extractall(path=extract_path)
+    except Exception as e:
+        error("Failed to extract file")
+        raise e
