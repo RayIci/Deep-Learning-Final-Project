@@ -2,4 +2,3 @@ services:
   program:
     build:
       context: .
-      container_name: text2image-gan
