@@ -1,7 +1,6 @@
 import os
 from torch.utils.data import Dataset
 import numpy as np
-import torch as torch
 from PIL import Image
 from tqdm import tqdm
 
@@ -24,7 +23,7 @@ class Flowers(Dataset):
         - transform_img: image transformation (applied when retried)
         - transform_caption: caption transformation (applied when retried)
         - force_download: force download
-        - resize: resize the images (images are resized instanly and not when retried)
+        - resize: resize the images (images are resized instanly and not when retrived)
         """
         
         super().__init__()
@@ -98,7 +97,8 @@ class Flowers(Dataset):
             
         
         info("Reading dataset ...")
-        # Load the data  TODO: Change in a optimized data structure
+        # TODO: Change in a optimized data structure
+        # Load the dataset
         # The final result is a list of tuple in the data variable with (image, caption)
         self.data = np.array([])
         
