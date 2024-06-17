@@ -165,7 +165,7 @@ class Flowers(Dataset):
                 if not os.path.isdir(txt_file) and txt_file.endswith(".txt"):
                     f_img_text = os.path.join(curr_work_path, txt_file)
                     
-                    img_name = f"{f_img_text.split('\\')[-1].split('.')[0]}.jpg"
+                    img_name = f"{txt_file.split('.')[0]}.jpg"
                     img_path = get_img_path(img_name)
                     img = Image.open(img_path)
                     class_number = int(class_file.split("_")[1])

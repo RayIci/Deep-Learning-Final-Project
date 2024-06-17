@@ -2,3 +2,7 @@ numpy
 torch
 torchvision
 scipy
+h5py
+pillow
+requests
+gdown
