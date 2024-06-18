@@ -91,7 +91,7 @@ class CLIPModel(torch.nn.Module):
         - loss (Callable, optional): loss function. Defaults to ContrastiveLoss.
         - loss_kwargs (dict, optional): loss function keyword arguments. Defaults to {}.
         - save_path (str, optional): path where to save the checkpoints. Defaults to None.
-        - logger (Callable, optional): logger. Defaults to CSVLogger with log path ${curr_working_dir}/logs}.
+        - logger (lightning.pytorch.loggers.Logger, optional): logger. Defaults to CSVLogger with log path ${curr_working_dir}/logs}.
         """
         
         print("Training on device: ", self.device)
