@@ -197,6 +197,9 @@ class Flowers(Dataset):
         if storing_mode == STORING_MODE.HDF5:
             self.hdf5_file.close()
             self.hdf5_file = h5py.File(hdf5_file_path, 'r')
+            self.images = self.hdf5_file['img']
+            self.captions = self.hdf5_file['cap']
+            self.classes = self.hdf5_file['class']
             
             
         success("\t=> Dataset loaded")         
