@@ -39,6 +39,26 @@ def ContrastiveLoss(image_features, text_features, temperature=0.01, device=("cu
 
 
 class CLIPModel(torch.nn.Module):
+    
+    @staticmethod
+    def load(model_pt_filepath, device=("cuda" if torch.cuda.is_available() else "cpu")):
+        # TODO : TEST
+        """ 
+        # Load CLIP
+        Load a CLIP model from a pt file containing the model state_dict.
+        
+        ## Args:
+        - model_pt_filepath (str): path to the pt file containing the model state_dict.
+        - device (str, optional): device to use. Defaults to ("cuda" if torch.cuda.is_available() else "cpu").
+        
+        ## Returns:
+        - CLIPModel: the loaded model
+        """
+        checkpoint = torch.load(model_pt_filepath)
+        loaded_model = CLIPModel(device=device)
+        loaded_model.load_state_dict(checkpoint['model_state_dict'])
+        return loaded_model
+    
     def __init__(self, model_name="ViT-B/32", device=("cuda" if torch.cuda.is_available() else "cpu")):
         """ 
         # CLIP Model
@@ -218,22 +238,3 @@ class CLIPModel(torch.nn.Module):
             if val_dataloader is not None:
                 print(f"\t=> Val Loss: {total_val_loss:.6f}")
             print("")
-
-
-def load_clip_model(model_pt_filepath, device=("cuda" if torch.cuda.is_available() else "cpu")):
-    # TODO : TEST
-    """ 
-    # Load CLIP
-    Load a CLIP model from a pt file containing the model state_dict.
-    
-    ## Args:
-    - model_pt_filepath (str): path to the pt file containing the model state_dict.
-    - device (str, optional): device to use. Defaults to ("cuda" if torch.cuda.is_available() else "cpu").
-    
-    ## Returns:
-    - CLIPModel: the loaded model
-    """
-    checkpoint = torch.load(model_pt_filepath)
-    loaded_model = CLIPModel(device=device)
-    loaded_model.load_state_dict(checkpoint['model_state_dict'])
-    return loaded_model
