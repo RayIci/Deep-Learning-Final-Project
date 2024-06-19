@@ -49,6 +49,7 @@ def download_CLIP_model(dataset: CLIP_DATASETS, download_path: str = os.path.joi
         success(f"\t=> CLIP model {dataset.name} downloaded")
         info(f"Extracting CLIP model {dataset.name} from {tar_file_path}")
         extract_tar_gz(file_path=tar_file_path, extract_path=clip_path)
+        os.rename(os.path.join(clip_path, "CLIP~FT_flowers", "CLIP~FT_flowers.pt"), ext_file_path)
         success(f"\t=> CLIP model {dataset.name} extracted")
 
 
