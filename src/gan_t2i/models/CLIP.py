@@ -116,7 +116,7 @@ class CLIPModel(torch.nn.Module):
                 if file.endswith(".pt"):
                     raise ValueError(f"Checkpoint path {save_path} contains a checkpoint file, the checkpoint path must be empty ({file} remove it to continue).")
         
-        logger.log_hyperparams({"epochs": num_epochs, "optimizer": type(optimizer), "optimizer_kwargs": optimizer.defaults})
+        logger.log_hyperparams({"epochs": num_epochs, "optimizer": type(optimizer), "optimizer_kwargs": optimizer.defaults, "loss": loss_function.__name__, "loss_kwargs": loss_kwargs})
         
         
         def process_batch(images, captions):
@@ -218,7 +218,7 @@ class CLIPModel(torch.nn.Module):
             if val_dataloader is not None:
                 print(f"\t=> Val Loss: {total_val_loss:.6f}")
             print("")
-            
+
 
 def load_clip_model(model_pt_filepath, device=("cuda" if torch.cuda.is_available() else "cpu")):
     # TODO : TEST
