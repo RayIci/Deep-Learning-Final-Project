@@ -20,7 +20,7 @@ class WGAN(nn.Module):
             
         # TODO: Extract embedding size from CLIP
         # coming from outside
-        
+       
 
         # TODO: Create generator and discriminator network 
         self.generator = torch.nn.DataParallel( Generator(embedding_size , p_emb_dim ) )
