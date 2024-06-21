@@ -40,6 +40,19 @@ def ContrastiveLoss(image_features, text_features, temperature=0.01, device=("cu
 
 class CLIPModel(torch.nn.Module):
     
+    def get_output_dimensions(self):
+        """Function to get the output dimensions of the CLIP model for both images and texts."""
+        dummy_image = torch.zeros(1, 3, 224, 224).to(self.device)  # Dummy image tensor
+        dummy_text = clip.tokenize(["dummy text"]).to(self.device)  # Dummy text tensor
+        
+        print(dummy_text)
+        
+        with torch.no_grad():
+            image_features = self.encode_image(dummy_image)
+            text_features = self.encode_text(dummy_text)
+        
+        return image_features.shape, text_features.shape
+    
     @staticmethod
     def load(model_pt_filepath, device=("cuda" if torch.cuda.is_available() else "cpu")):
         # TODO : TEST
@@ -54,7 +67,8 @@ class CLIPModel(torch.nn.Module):
         ## Returns:
         - CLIPModel: the loaded model
         """
-        checkpoint = torch.load(model_pt_filepath)
+
+        checkpoint = torch.load(model_pt_filepath,map_location=device)
         loaded_model = CLIPModel(device=device)
         loaded_model.load_state_dict(checkpoint['model_state_dict'])
         return loaded_model

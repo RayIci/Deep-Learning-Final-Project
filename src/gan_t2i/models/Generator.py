@@ -56,11 +56,11 @@ class Generator(nn.Module):
 
     def forward(self, embed_vector, z):
 
+        #print("Forward Generator")
         # TODO: To implement
-        #projected_embed = self.projection(embed_vector).unsqueeze(2).unsqueeze(3)
-        #latent_vector = torch.cat([projected_embed, z], 1)
-        #output = self.Generator_net(latent_vector)
-        
+        projected_embed = self.projection(embed_vector).unsqueeze(2).unsqueeze(3)
+        latent_vector = torch.cat([projected_embed, z], 1)
+        output = self.Generator_net(latent_vector)
         return output
             
             

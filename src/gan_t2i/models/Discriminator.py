@@ -4,7 +4,7 @@ import torch.nn as nn
 class Discriminator(nn.Module):
     
     """ GAN Discriminator """
-def __init__(self , embedding_dim):
+    def __init__(self , embedding_dim , p_emb_dim):
         """
         Initialize the Discriminator
 
@@ -17,10 +17,10 @@ def __init__(self , embedding_dim):
         self.image_size = 64
         self.num_channels = 3
         self.embed_dim = embedding_dim                   # dimension of the embedding coming from CLIP 
-        self.projected_embed_dim = 128
-        self.ndf = 64
+        self.projected_embed_dim = p_emb_dim             # dimension of the embedding to obtain
         self.B_dim = 128
         self.C_dim = 16
+        self.ndf = 64                                    # new dimension of the features
 
         # Define the architecture of the discriminator
         self.netD_1 = nn.Sequential(
@@ -52,11 +52,23 @@ def __init__(self , embedding_dim):
                     )
 
             def forward(self, inp, embed):
+                
                 projected_embed = self.projection(embed)
-                replicated_embed = projected_embed.repeat(4, 4, 1, 1).permute(2,  3, 0, 1)
+                #print("Dimensioni di inp:", inp.size())
+                #print("Dimensioni di embed:", embed.size())
+                #print("Dimensioni di projected_embed:", projected_embed.size())
+                #replicated_embed = projected_embed.repeat(4, 4, 1, 1).permute(2,  3, 0, 1)
+                # Reshape projected_embed to match inp
+                projected_embed = projected_embed.unsqueeze(2).unsqueeze(3)
+                replicated_embed  = projected_embed.expand(-1, -1, inp.size(2), inp.size(3))   # 16 , 64 , 4 ,4 
+                
+                #print("Dimensioni di inp:", inp.size())
+                #print("Dimensioni di Replicated_embed:", replicated_embed.size())
+                
                 hidden_concat = torch.cat([inp, replicated_embed], 1)
                 return hidden_concat
-            
+                
+                    
         ###########################################
 
         # Initialize the projector
@@ -69,19 +81,19 @@ def __init__(self , embedding_dim):
             nn.Sigmoid()
         )	
         
-def forward(self, inp, embed):
-        """
-        Forward pass of the discriminator
+    def forward(self, inp, embed):
+            """
+            Forward pass of the discriminator
 
-        Args:
-            inp (torch.Tensor): Input images
-            embed (torch.Tensor): Embeddings coming from CLIP
+            Args:
+                inp (torch.Tensor): Input images
+                embed (torch.Tensor): Embeddings coming from CLIP
 
-        Returns:
-            tuple: Output logits and intermediate features
-        """
-        x_intermediate = self.netD_1(inp)
-        x = self.projector(x_intermediate, embed)
-        x = self.netD_2(x)
+            Returns:
+                tuple: Output logits and intermediate features
+            """
+            x_intermediate = self.netD_1(inp)
+            x = self.projector(x_intermediate, embed)
+            x = self.netD_2(x)
 
-        return x.view(-1, 1).squeeze(1) , x_intermediate
+            return x.view(-1, 1).squeeze(1) , x_intermediate
