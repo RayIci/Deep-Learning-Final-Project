@@ -13,7 +13,9 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import torchvision.transforms as transforms
 
-class WGAN(nn.Module):
+import random
+
+class WGAN(object):
     
     def __init__(self, text_emb_model , embedding_size , p_emb_dim , device=("cuda" if torch.cuda.is_available() else "cpu")):
         
@@ -22,6 +24,8 @@ class WGAN(nn.Module):
         
         self.device = device
         self.text_emb_model = text_emb_model
+        self.embedding_size = embedding_size
+        self.p_emb_dim = p_emb_dim
         
         # TODO : read parameters related to the GAN Net
         #with open('config.yaml', 'r') as f:
@@ -34,18 +38,58 @@ class WGAN(nn.Module):
         self.DITER = 5               # DISCRIMINANT ITERATION
         self.l1_coef = 50
         self.l2_coef = 100
-            
-        # TODO: Extract embedding size from CLIP
-        # coming from outside
         
-
+        
         # TODO: Create generator and discriminator network 
         self.generator = torch.nn.DataParallel( Generator(embedding_size , p_emb_dim ) )
         self.discriminator = torch.nn.DataParallel( Discriminator(embedding_size , p_emb_dim ) )
         
+        # Set up Discriminator and Generator Optimizer 
+        self.optimD = torch.optim.Adam(self.discriminator.parameters(), lr=self.lr, betas=(self.beta1, 0.999))
+        self.optimG = torch.optim.Adam(self.generator.parameters(), lr=self.lr, betas=(self.beta1, 0.999))
+            
         
-        # TODO: load checkpoints coming from already executed net
+       
+    # TODO: load checkpoints coming from already executed net 
+    @staticmethod
+    def load(model_pt_filepath, device=("cuda" if torch.cuda.is_available() else "cpu")):
+        """
+        Load a model from a checkpoint file.
+
+        Args:
+            model_pt_filepath (str): The path to the checkpoint file.
+            device (str, optional): The device to use. Defaults to "cuda" if CUDA is available, otherwise "cpu".
+
+        Raises:
+            FileNotFoundError: If the checkpoint file does not exist.
+
+        Returns:
+            tuple: A tuple containing the epoch number, total number of steps, training loss for the generator, and training loss for the discriminator.
+
+        """
+        if not os.path.exists(model_pt_filepath):
+            raise FileNotFoundError(f"Checkpoint path {model_pt_filepath} does not exist")
         
+        checkpoint = torch.load(model_pt_filepath, map_location=device)
+        text_emb_model = checkpoint["text_emb_model"]
+        embedding_size = checkpoint["embedding_size"]
+        p_emb_dim = checkpoint["p_emb_dim"]
+        
+
+        loaded_model = WGAN(text_emb_model,embedding_size,p_emb_dim)
+        
+        # loading generator and discriminator already trained
+        loaded_model.generator.load_state_dict(checkpoint["gen_model_state_dict"])
+        loaded_model.optimG.load_state_dict(checkpoint["gen_optimizer_state_dict"])
+        
+        loaded_model.discriminator.load_state_dict(checkpoint["discr_model_state_dict"])
+        loaded_model.optimD.load_state_dict(checkpoint["discr_optimizer_state_dict"])
+        
+        epoch = checkpoint["epoch"]
+        
+        print(f"Checkpoint loaded. Resuming training from epoch {epoch}.")
+        
+        return loaded_model
         
     def fit(self, train_dataloader , val_dataloader , num_epochs , save_path ):
         
@@ -53,7 +97,6 @@ class WGAN(nn.Module):
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
         self.num_epochs = num_epochs
-    
 
 
         print("Training on device: ", self.device)
@@ -63,10 +106,7 @@ class WGAN(nn.Module):
         
         # Set the logger if it is not provided
         #logger = logger or CSVLogger(os.path.join(os.getcwd(), "logs"), name=self._get_name())
-        
-        # Set up Discriminator and Generator Optimizer 
-        self.optimD = torch.optim.Adam(self.discriminator.parameters(), lr=self.lr, betas=(self.beta1, 0.999))
-        self.optimG = torch.optim.Adam(self.generator.parameters(), lr=self.lr, betas=(self.beta1, 0.999))
+    
         
         # Validate the checkpoint path or create it
         if save_path is not None and os.path.exists(save_path) and not os.path.isdir(save_path):
@@ -238,29 +278,23 @@ class WGAN(nn.Module):
             
             # Save the model checkpoints at the end of the epoch in the save_path 
             # TODO:
-            
-            '''
             if save_path is not None:
                 save_obj = {}
+                save_obj['text_emb_model']=self.text_emb_model
+                save_obj['p_emb_dim']=self.p_emb_dim
+                save_obj['embedding_size']=self.embedding_size
+
                 save_obj["epoch"] = epoch+1
                 save_obj["total_steps"] = total_steps+1
                 save_obj["tr_loss_gen"] = epoch_loss_gen
                 save_obj["tr_loss_discr"] = epoch_loss_discr
-                save_obj["model_state_dict"] = self.state_dict()
-                save_obj["optimizer_state_dict"] = optimizer.state_dict()
-                if val_dataloader is not None:
-                    save_obj["val_loss"] = total_val_loss
+                save_obj["gen_model_state_dict"] = self.generator.state_dict()
+                save_obj["gen_optimizer_state_dict"] = self.optimG.state_dict()
+                save_obj["discr_model_state_dict"] = self.discriminator.state_dict()
+                save_obj["discr_optimizer_state_dict"] = self.optimD.state_dict()
                     
-                torch.save(save_obj, os.path.join(save_path, f"{self._get_name()}_epoch-{epoch+1}.pt"))
+                torch.save(save_obj, os.path.join(save_path, f"{self.__class__.__name__}_epoch-{epoch+1}.pt"))
                 
-            # Print the epoch summary on stdout
-            print(f"Epoch [{epoch+1}/{num_epochs}] Summary:")
-            print(f"\t=> Train Loss: {epoch_loss:.6f}")
-            if val_dataloader is not None:
-                print(f"\t=> Val Loss: {total_val_loss:.6f}")
-            print("")
-            '''
-                    
                     
             # How Visualize the an image for each batch
             #running_loss = 0.0
@@ -288,7 +322,35 @@ class WGAN(nn.Module):
             #self.optimG.zero_grad()
             #optimizer.zero_grad()   # Reset gradients
                 
+    # TODO: Implement prediction  
+    def predict(self, captions):
+        """
+        Generates a fake image based on the given caption using the generator model.
+
+        Parameters:
+            caption (str): The caption to generate the fake image from.
+
+        Returns:
+            torch.Tensor: The generated fake image. The shape of the tensor is (3, H, W), where H and W are the height and width of the image. The values are in the range [0, 1].
+        """
+        #self.generator.eval()
+        #self.text_emb_model.eval()
+        
+        with torch.no_grad():
+            
+            caption_embedding = self.text_emb_model.encode_text(captions).to(self.device)
+            
+            
+            z = torch.randn(16, self.noise_dim, 1, 1).to(
+                    self.device).float()
                 
+            fake_image = self.generator(caption_embedding.float(), z).cpu()
+            
+            fake_image = (fake_image + 1) / 2
+            fake_image = fake_image.squeeze(0)
+            fake_image = fake_image.permute(1, 2, 0)
+            
+        return fake_image
                 
                 
         
