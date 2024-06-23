@@ -42,7 +42,7 @@ class CLIPModel(torch.nn.Module):
     
     @staticmethod
     def load(model_pt_filepath, device=("cuda" if torch.cuda.is_available() else "cpu")):
-        # TODO : TEST
+
         """ 
         # Load CLIP
         Load a CLIP model from a pt file containing the model state_dict.

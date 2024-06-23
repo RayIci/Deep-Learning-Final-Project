@@ -16,8 +16,8 @@ from PIL import Image
 
 # Images transformations
 transform_img = transforms.Compose([
-    transforms.Resize(224, interpolation=Image.BICUBIC),
-    transforms.CenterCrop(224),
+    transforms.Resize(64, interpolation=Image.BICUBIC),
+    transforms.CenterCrop(64),
     transforms.ToTensor(),    
     transforms.Normalize([0.4355, 0.3777, 0.2879], [0.2571, 0.2028, 0.2101])
 ])
@@ -35,17 +35,23 @@ data_path = os.path.join(os.getcwd(), "data")
 dataset = DatasetFactory.Flowers(data_path, transform_img=transform_img, transform_caption=tokenize_text)
 
 # Split data into train, validation and test
-t_size = int(0.85 * len(dataset))
-v_size = int(0.1 * len(dataset))
-t_size = len(dataset) - v_size - t_size
+train_size = int(0.05 * len(dataset))       
+val_size = int(0.02 * len(dataset))
+test_size = int(0.02 * len(dataset))
 
-train_sampler = SubsetRandomSampler(list(range(t_size)))
-val_sampler = SubsetRandomSampler(list(range(t_size, t_size + v_size)))
-test_sampler = SubsetRandomSampler(list(range(t_size + v_size, len(dataset))))
+# Cration of train, validation and test set indices and samplers
+train_indices = list(range(train_size))
+val_indices = list(range(train_size, train_size + val_size))
+test_indices = list(range(train_size + val_size, train_size + val_size + test_size))
 
+train_sampler = SubsetRandomSampler(train_indices)
+val_sampler = SubsetRandomSampler(val_indices)
+test_sampler = SubsetRandomSampler(test_indices)
+
+# Creation of train, validation and test dataloaders
 train_loader = DataLoader(dataset, batch_size=64, sampler=train_sampler, pin_memory=True)
 val_loader = DataLoader(dataset, batch_size=64, sampler=val_sampler, pin_memory=True)
-test_loader = DataLoader(dataset, batch_size=64, sampler=test_sampler, pin_memory=True) 
+test_loader = DataLoader(dataset, batch_size=64, sampler=test_sampler, pin_memory=True)
 
 # Get the caption embedding network (our finetuned version of CLIP)
 checkpoint_path = download_CLIP_model(CLIP_DATASETS.FLOWERS)
@@ -56,6 +62,5 @@ gan = GAN_INT_CLS(
     emb_network=clip_emb_model,
     emb_dim=512
 )
-gan.summary()
 
-# gan.fit(train_loader, val_loader)
+gan.fit(train_loader, val_loader)
