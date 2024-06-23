@@ -36,7 +36,8 @@ class Generator(nn.Module):
         )
 
 
-        # The generator network. Based on: https://github.com/aelnouby/Text-to-Image-Synthesis/blob/master/models/wgan_cls.py
+        # The generator network. 
+        # Based on: https://github.com/aelnouby/Text-to-Image-Synthesis/blob/master/models/wgan_cls.py
         self.generator_net = nn.Sequential(
             nn.ConvTranspose2d(self.latent_dim, self.n_gf * 8, 4, 1, 0, bias=False),
 			nn.BatchNorm2d(self.n_gf * 8),
@@ -65,9 +66,10 @@ class Generator(nn.Module):
 
 
 
-    def forward(self, emb_caption, z):
+    def forward(self, emb_cap, z):
+
         # Project the caption embedding 
-        emb_proj = self.proj_emb_net(emb_caption)
+        emb_proj = self.proj_emb_net(emb_cap)
 
         # Concatenate the projected caption embedding and the noise vector z
         latent_vector = torch.cat([emb_proj, z], 1)
@@ -85,11 +87,85 @@ class Generator(nn.Module):
 
 class Discriminator(nn.Module):
     
-    def __init__(self):
+    def __init__(self, emb_dim, proj_emb_dim = 128, num_dis_features = 64):
+
         super(Discriminator, self).__init__()
 
-    def forward(self, x):
+        self.emb_dim = emb_dim
+        self.proj_emb_dim = proj_emb_dim
+        self.n_df = num_dis_features
+
+
+        # The projection network of the caption embedding
+        self.proj_emb_net = nn.Sequential(
+            nn.Linear(
+                in_features=self.emb_dim,
+                out_features=self.proj_emb_dim
+            ),
+            nn.BatchNorm1d(num_features=self.proj_emb_dim),
+            nn.LeakyReLU(negative_slope=0.2, inplace=True)
+        )
+
+
+        # The discriminator network. 
+        # Based on: https://github.com/aelnouby/Text-to-Image-Synthesis/blob/master/models/wgan_cls.py
+        self.discriminator_net_1 = nn.Sequential(
+
+			# Input size => 3 x 64 x 64
+			nn.Conv2d(3, self.n_df, 4, 2, 1, bias=False),
+			nn.LeakyReLU(0.2, inplace=True),
+			# Current size => (ndf) x 32 x 32
+		
+            nn.Conv2d(self.n_df, self.n_df * 2, 4, 2, 1, bias=False),
+			nn.BatchNorm2d(self.n_df * 2),
+			nn.LeakyReLU(0.2, inplace=True),
+			# Current size => (ndf * 2) x 16 x 16
+		
+            nn.Conv2d(self.n_df * 2, self.n_df * 4, 4, 2, 1, bias=False),
+			nn.BatchNorm2d(self.n_df * 4),
+			nn.LeakyReLU(0.2, inplace=True),
+			# Current size => (ndf * 4) x 8 x 8
+		
+            nn.Conv2d(self.n_df * 4, self.n_df * 8, 4, 2, 1, bias=False),
+			nn.BatchNorm2d(self.n_df * 8),
+			nn.LeakyReLU(0.2, inplace=True),
+			# Current size => (ndf * 8) x 4 x 4
+        )
+
+
+
+        # The second discriminator network.
+        self.discriminator_net_2 = nn.Sequential(
+
+            # Input size => ((ndf * 8) + proj_emb_size) x 4 x 4
+    	    nn.Conv2d(self.n_df * 8 + self.proj_emb_dim, 1, 4, 1, 0, bias=False),
+            # Output size => 1 x 1 x 1
+            nn.Sigmoid()
+		)
+
+
+    def forward(self, img, cap_emb):
+        
+        # Result of the first discriminator conv network
+        x_int = self.discriminator_net_1(img)
+
+        # Caption embedding projection        
+        proj_emb = self.proj_emb_net(cap_emb)
+        
+        # Resizing the projected embedding repating it 
+        # 4 times to the dimensione (n_batch x proj_emb_dim x 4 x 4) 
+        rep_emb = proj_emb.unsqueeze(2).unsqueeze(3).repeat(1, 1, 4, 4)
+
+        # Concatenate the resized and repated projected embedding 
+        # with the result of the first discriminator conv network
+        x_concat = torch.cat([x_int, rep_emb], 1)
+
+        # Forward the concatenated tensor to the second discriminator conv network
+        x = self.discriminator_net_2(x_concat)
+
         return x
+
+
 
 
 class GAN_INT_CLS(nn.Module):
@@ -125,7 +201,11 @@ class GAN_INT_CLS(nn.Module):
         )
 
         # The discriminator network
-        self.discriminator = Discriminator()
+        self.discriminator = Discriminator(
+            emb_dim = emb_dim,
+            proj_emb_dim = proj_emb_dim,
+            num_dis_features = num_gen_features
+        )
         
 
     def fit(self, train_dataloader, val_dataloader = None, device = "cuda" if torch.cuda.is_available() else "cpu", epochs = 600):
@@ -150,6 +230,7 @@ class GAN_INT_CLS(nn.Module):
         # Generator summary
         summary(self.generator, [(1, self.emb_dim), (1, self.noise_dim)])
 
-        # TODO: Discriminator summary
+        # Discriminator summary
+        summary(self.discriminator, [(1, 3, 64, 64), (1, self.emb_dim)])
 
         # TODO: GAN-INT-CLS summary
