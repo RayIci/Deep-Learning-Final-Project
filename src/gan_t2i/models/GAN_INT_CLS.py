@@ -197,6 +197,7 @@ class GAN_INT_CLS(nn.Module):
         """
         super(GAN_INT_CLS, self).__init__()
 
+        self.device = device
         self.emb_dim = emb_dim
         self.proj_emb_dim = proj_emb_dim
         self.noise_dim = noise_dim
@@ -221,6 +222,19 @@ class GAN_INT_CLS(nn.Module):
             num_dis_features = num_gen_features
         ).to(device)
         
+
+    def generate_images(self, captions):
+        if len(captions.size()) == 1:
+            captions = captions.unsqueeze(0)
+        
+        with torch.no_grad():
+            self.generator.eval()
+            emb_cap = self.emb_net.encode_text(captions.to(self.device)).to(self.device).float() 
+            z = torch.distributions.Normal(0.0, 0.1).sample((captions.size(0), self.noise_dim)).to(self.device)
+            fake_images = self.generator(emb_cap, z)
+            
+            return fake_images
+
 
     def fit(self, 
             train_dataloader, val_dataloader = None, 
