@@ -45,8 +45,6 @@ class CLIPModel(torch.nn.Module):
         dummy_image = torch.zeros(1, 3, 224, 224).to(self.device)  # Dummy image tensor
         dummy_text = clip.tokenize(["dummy text"]).to(self.device)  # Dummy text tensor
         
-        print(dummy_text)
-        
         with torch.no_grad():
             image_features = self.encode_image(dummy_image)
             text_features = self.encode_text(dummy_text)
@@ -112,6 +110,7 @@ class CLIPModel(torch.nn.Module):
         loss_kwargs = {},
         save_path = None,
         logger = None,
+        starting_epoch =0 
     ):
         """ 
         # Fit the model
@@ -148,7 +147,8 @@ class CLIPModel(torch.nn.Module):
         elif save_path is not None and os.path.exists(save_path) and os.path.isdir(save_path):
             for file in os.listdir(save_path):
                 if file.endswith(".pt"):
-                    raise ValueError(f"Checkpoint path {save_path} contains a checkpoint file, the checkpoint path must be empty ({file} remove it to continue).")
+                    print("The checkpoint_CLIP folder already contains .pt's file with related epochs , we start from {} to train ".format(starting_epoch))
+                    #raise ValueError(f"Checkpoint path {save_path} contains a checkpoint file, the checkpoint path must be empty ({file} remove it to continue).")
         
         logger.log_hyperparams({"epochs": num_epochs, "optimizer": type(optimizer), "optimizer_kwargs": optimizer.defaults, "loss": loss_function.__name__, "loss_kwargs": loss_kwargs})
         
@@ -204,7 +204,7 @@ class CLIPModel(torch.nn.Module):
                 
                 # Update progress bar
                 pbar.update(1)
-                pbar.set_description(f"Epoch [{epoch+1}/{num_epochs}] " + 
+                pbar.set_description(f"Epoch [{starting_epoch+ epoch+1}/{starting_epoch+num_epochs}] " + 
                                      f"Batch [{total_processed_batches+1}/{STEPS_PER_EPOCH}]: " +
                                      f"Loss: {(running_loss/(total_processed_batches+1)):.6f}")
 
@@ -212,7 +212,7 @@ class CLIPModel(torch.nn.Module):
             
             # Compute the metrics and log them
             epoch_loss = running_loss / len(train_dataloader)
-            metrics = {"epoch": epoch+1, "train_loss": epoch_loss,}
+            metrics = {"epoch": starting_epoch+epoch+1, "train_loss": epoch_loss,}
             
             # If the val_dataloader is not None, evaluate the model on the validation set
             if val_dataloader is not None:
@@ -236,7 +236,7 @@ class CLIPModel(torch.nn.Module):
             # Save the checkpoint
             if save_path is not None:
                 save_obj = {}
-                save_obj["epoch"] = epoch+1
+                save_obj["epoch"] = starting_epoch+epoch+1
                 save_obj["total_steps"] = total_steps+1
                 save_obj["tr_loss"] = epoch_loss
                 save_obj["model_state_dict"] = self.state_dict()
@@ -244,10 +244,10 @@ class CLIPModel(torch.nn.Module):
                 if val_dataloader is not None:
                     save_obj["val_loss"] = total_val_loss
                     
-                torch.save(save_obj, os.path.join(save_path, f"{self._get_name()}_epoch-{epoch+1}.pt"))
+                torch.save(save_obj, os.path.join(save_path, f"{self._get_name()}_epoch-{starting_epoch+epoch+1}.pt"))
                 
             # Print the epoch summary on stdout
-            print(f"Epoch [{epoch+1}/{num_epochs}] Summary:")
+            print(f"Epoch [{starting_epoch + epoch+1}/{num_epochs}] Summary:")
             print(f"\t=> Train Loss: {epoch_loss:.6f}")
             if val_dataloader is not None:
                 print(f"\t=> Val Loss: {total_val_loss:.6f}")

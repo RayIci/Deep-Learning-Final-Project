@@ -23,28 +23,25 @@ class WGAN(object):
         
         
         self.device = device
-        self.text_emb_model = text_emb_model
-        self.embedding_size = embedding_size
-        self.p_emb_dim = p_emb_dim
-        
-        # TODO : read parameters related to the GAN Net
-        #with open('config.yaml', 'r') as f:
-        #    config = yaml.load(f)
-        self.noise_dim = 100
-        self.batch_size = 32
+        self.text_emb_model = text_emb_model       # Model CLIP already trained
+        self.embedding_size = embedding_size       # output dimension of the last layer of CLIP - 512
+        self.p_emb_dim = p_emb_dim                 # dimension is which we want to project the data - 128
+
+        self.noise_dim = 100                       # Dimension of the noise z 
+        self.batch_size = 32                       # Dimension of the batch ( not used )
         self.num_workers = 4
-        self.lr = 0.05
-        self.beta1 = 0.5
-        self.DITER = 5               # DISCRIMINANT ITERATION
+        self.DITER = 5                             # DISCRIMINANT ITERATION
         self.l1_coef = 50
         self.l2_coef = 100
+        self.lr = 0.05
+        self.beta1 = 0.5
         
         
-        # TODO: Create generator and discriminator network 
+        # Create generator and discriminator network 
         self.generator = torch.nn.DataParallel( Generator(embedding_size , p_emb_dim ) )
         self.discriminator = torch.nn.DataParallel( Discriminator(embedding_size , p_emb_dim ) )
         
-        # Set up Discriminator and Generator Optimizer 
+        # Set up Discriminator and Generator Optimizer Adam 
         self.optimD = torch.optim.Adam(self.discriminator.parameters(), lr=self.lr, betas=(self.beta1, 0.999))
         self.optimG = torch.optim.Adam(self.generator.parameters(), lr=self.lr, betas=(self.beta1, 0.999))
             
@@ -64,7 +61,8 @@ class WGAN(object):
             FileNotFoundError: If the checkpoint file does not exist.
 
         Returns:
-            tuple: A tuple containing the epoch number, total number of steps, training loss for the generator, and training loss for the discriminator.
+            tuple: A tuple containing the epoch number, total number of steps, training loss for the generator, 
+            and training loss for the discriminator.
 
         """
         if not os.path.exists(model_pt_filepath):
@@ -91,9 +89,9 @@ class WGAN(object):
         
         return loaded_model
         
-    def fit(self, train_dataloader , val_dataloader , num_epochs , save_path ):
+    def fit(self, train_dataloader , val_dataloader , num_epochs , save_path ,starting_epoch = 0):
         
-        # TODO : read info related to the net 
+        # read info related to the net 
         self.train_dataloader = train_dataloader
         self.val_dataloader = val_dataloader
         self.num_epochs = num_epochs
@@ -103,9 +101,6 @@ class WGAN(object):
         
         total_steps = 0                             # Counter of total number of iterations
         STEPS_PER_EPOCH = len(train_dataloader)
-        
-        # Set the logger if it is not provided
-        #logger = logger or CSVLogger(os.path.join(os.getcwd(), "logs"), name=self._get_name())
     
         
         # Validate the checkpoint path or create it
@@ -116,26 +111,24 @@ class WGAN(object):
         elif save_path is not None and os.path.exists(save_path) and os.path.isdir(save_path):
             for file in os.listdir(save_path):
                 if file.endswith(".pt"):
-                    raise ValueError(f"Checkpoint path {save_path} contains a checkpoint file, the checkpoint path must be empty ({file} remove it to continue).")
+                    print("Already exist .pt files related to some epochs , fit will overwrite from epoch {}".format(starting_epoch))
+                    #raise ValueError(f"Checkpoint path {save_path} contains a checkpoint file, the checkpoint path must be empty ({file} remove it to continue).")
         
         # train WGAN
         one = torch.FloatTensor([1])
         mone = one * -1
-
         one = Variable(one).to(self.device)
         mone = Variable(mone).to(self.device)
-        
         print("One : {} | Mone : {} ".format(one,mone))
         
-        # TRAIN THE DISCRIMINATOR
-        #for epoch in range(num_epochs):
+
+        # TRAIN THE DISCRIMINATOR AND GENERATOR
         
         for epoch in range(self.num_epochs):
-            print("epoch iter {} ".format(epoch))
+            print("epoch iter {} ".format(starting_epoch+epoch))
             
             # Tell the model that we are training
-            #self.generator.train()
-            #self.discriminator.train()
+            self.discriminator.train()
 
             # Progress bar
             pbar = tqdm(total=STEPS_PER_EPOCH)
@@ -145,74 +138,66 @@ class WGAN(object):
             for total_processed_batches, (images, captions, _) in enumerate(self.train_dataloader):
                 images, captions = images.to(self.device), captions.to(self.device)
                 
-                #print("batch iter {} ".format(i))
-                
                 # Encode captions using the text_emb_model
-                caption_embeddings = self.text_emb_model.encode_text(captions).to(self.device)
-                #image_embeddings = self.text_emb_model.encode_image(images) #.to(self.device)
-                
-                #print("Dimensioni di caption_embeddings:", caption_embeddings.size())
-                #print("Dimensioni di images:", images.size())
-                #print("Dimensioni di images:", image_embeddings.size())
+                captions_embeddings = self.text_emb_model.encode_text(captions).to(self.device)
+                # image_embeddings = self.text_emb_model.encode_image(images) #.to(self.device)
 
                 # Extract Real Image and related Caption
-                right_images = Variable(images.float()) #.to(self.device)
-                right_embed = Variable(caption_embeddings.float())  #.to(self.device)
+                right_images = Variable(images.float()).to(self.device)                    
+                right_embeds = Variable(captions_embeddings.float()).to(self.device)       
                 
+                # Train the discriminator , parameter trainable 
+                for p in self.discriminator.parameters():
+                    p.requires_grad = True
+
                 # ---------------------
                 #  Train Discriminator
                 # ---------------------
-                for j in range(self.DITER):                             # iterate on the descriminator 
-                    self.optimD.zero_grad()
+                for j in range(self.DITER):                             
 
-                    #print("Discriminator iteration {} ".format(j))
+                    
+                    self.optimD.zero_grad()                          
                     
                     # Generate salt
-                    z = torch.randn(images.size(0), self.noise_dim, 1, 1).to(
-                        self.device).float()
+                    z = torch.randn(images.size(0), self.noise_dim, 1, 1).to( self.device).float()
+                    
                     
                     # Generate Fake image based on salt
-                    fake_images = self.generator(right_embed, z).detach()    # detach useful to not compute the gradient
-                    wrong_images = Variable(fake_images.float()) #.to(self.device)
+                    # Detach  useful to not compute the gradient in the generator because we are training the discriminator
+                    fake_images = self.generator(right_embeds, z).detach()          
+                    wrong_images = Variable(fake_images.float())                    
                     
-                    #z = Variable(torch.randn(right_images.size(0), self.z_dim), volatile=True).to(self.device)
-                    #z = z.view(z.size(0), self.z_dim, 1, 1)
-                    #fake_images = Variable(self.generator(right_embed, z).data)
-
-                    
-                    #print("Free unsed space iter GENERATOR FAKE IMAGE {} ".format(i))
                     # Free up unused memory
                     torch.cuda.empty_cache()
                     
                     # Discriminate real image , real caption
-                    d_real, _ = self.discriminator(right_images, right_embed)
-                    d_real_loss = torch.mean(d_real)
-                    d_real_loss.backward()
-                    #d_real_loss.backward(mone)
+                    d_real, _ = self.discriminator(right_images, right_embeds)  
                     
+                    d_real_loss = torch.mean(d_real).unsqueeze(0)
+                    # with Wasserstein GAN (WGAN) you want to MAXIMIZE the loss function (MONE)
+                    (d_real_loss).backward(mone)                           
+
                     # Discriminate fake image , real caption
-                    d_fake, _ = self.discriminator(wrong_images, right_embed)
-                    d_fake_loss = torch.mean(d_fake)
-                    d_fake_loss.backward()
-                    #d_fake_loss.backward(one)
+                    d_fake, _ = self.discriminator(wrong_images, right_embeds)  
+                    d_fake_loss = torch.mean(d_fake).unsqueeze(0)
+                    # with Wasserstein GAN (WGAN) you want to MINIMIZE the loss function (ONE)
+                    d_fake_loss.backward(one)                              
                     
+                    print("-- d_real_loss: {} , d_fake_loss: {}".format(d_real_loss,d_fake_loss))
+
                     # NOTE : Implement Gradient Penalty
                     
                     # compute of the loss function 
                     d_loss = d_real_loss - d_fake_loss
-                    d_loss = - d_loss
                     self.optimD.step()
                     total_steps += 1
                     running_loss_discr += d_loss.item()
+
                     
                     # Weight clipping
                     for p in self.discriminator.parameters():
                         p.data.clamp_(-0.01, 0.01)
-                        
-                # ------------------------------------- #
                     
-                #print("Summary Memory:",torch.cuda.memory_summary(device=None, abbreviated=False))
-                #print("Free unsed space iter {} ".format(i))
                 # Free up unused memory
                 torch.cuda.empty_cache()
                 
@@ -220,45 +205,38 @@ class WGAN(object):
                 # ---------------------
                 #  Train Generator
                 # ---------------------
+
+                #train the generator 
+                self.generator.train()
+ 
                 self.optimG.zero_grad()
                 
-                z = torch.randn(images.size(0), self.noise_dim, 1, 1).to(
-                    self.device).float()
+                # Generate salt 
+                z = torch.randn(images.size(0), self.noise_dim, 1, 1).to(self.device).float() 
                 
                 # Generate Fake image
-                fake_images = self.generator(right_embed , z)
-                wrong_images = Variable(fake_images.float()) #.to(self.device)
+                fake_images = self.generator(right_embeds , z)                                 
+                wrong_images = Variable(fake_images.float())
                 
                 # Discriminate fake image , real caption
-                d_fake, _ = self.discriminator(wrong_images, right_embed)
-                
-                g_loss = torch.mean(d_fake)
-                #g_loss.backward(mone)
-                g_loss.backward()
-                #g_loss = - g_loss
+                d_fake, _ = self.discriminator(wrong_images, right_embeds)                     
+                g_loss = torch.mean(d_fake).unsqueeze(0)
+                # we want to MINIMIZE the loss function 
+                g_loss.backward(mone)                 
+                g_loss = -g_loss
                 self.optimG.step()
                 
                 # Update counters
                 total_steps += 1
                 running_loss_gen += g_loss.item()
                 
-                # ------------------------ #
-                
                 # Free up unused memory
                 torch.cuda.empty_cache()
                 
-                '''
-                print(f"Epoch [{epoch+1}/{num_epochs}] | 
-                      d_loss: {d_loss.item()} | g_loss: {g_loss.item()}")
-                # Print the epoch summary on stdout
-                print(f"\t=> Train Loss Generator: {g_loss:.6f}")
-                print(f"\t=> Train Loss Discriminator: {d_loss:.6f}")
-                print("")
-                '''
                 
                 # Update progress bar
                 pbar.update(1)
-                pbar.set_description(f"Epoch [{epoch+1}/{num_epochs}] " + 
+                pbar.set_description(f"Epoch [{starting_epoch+epoch+1}/{starting_epoch+num_epochs}] " + 
                                         f"Batch [{total_processed_batches+1}/{STEPS_PER_EPOCH}] \n " +
                                         f" => Loss Discriminator: {(running_loss_discr/(total_processed_batches+1)):.6f} \n" +
                                         f" => Loss Generator: {(running_loss_gen/(total_processed_batches+1)):.6f} \n " 
@@ -269,22 +247,69 @@ class WGAN(object):
             epoch_loss_discr = running_loss_discr / len(train_dataloader)
             
             # Print the epoch summary after one epoch
-            print(f"Epoch [{epoch+1}/{num_epochs}] Summary: \n")
+            print(f"Epoch [{starting_epoch+epoch+1}/{num_epochs}] Summary: \n")
             print(f"\t=> Train Generator Loss: {epoch_loss_gen:.6f} \n ")
             print(f"\t=> Train Discriminator Loss: {epoch_loss_discr:.6f} \n ")
             print("")
                 
-            # TODO: Validation Part
+            def Validation(val_dataloader):
+                print("Validating...")
+                self.generator.eval()
+                self.discriminator.eval()
+
+                val_loss_gen = 0.0
+                val_loss_discr = 0.0
+
+                # Disabling gradients during validation
+                with torch.no_grad():  
+                    for val_images, val_captions, _ in val_dataloader:
+                        val_images, val_captions = val_images.to(self.device), val_captions.to(self.device)
+                        
+                        # Encode captions using the text embedding model
+                        val_captions_embeddings = self.text_emb_model.encode_text(val_captions).to(self.device)
+
+                        # Prepare validation images and captions embeddings
+                        right_images = val_images.float().to(self.device)
+                        right_embeds = val_captions_embeddings.float().to(self.device)
+
+                        # Generate fake images
+                        z = torch.randn(val_images.size(0), self.noise_dim, 1, 1).to(self.device).float()
+                        fake_images = self.generator(right_embeds, z)
+
+                        # Discriminate real images
+                        d_real, _ = self.discriminator(right_images, right_embeds)
+                        d_real_loss = torch.mean(d_real)
+
+                        # Discriminate fake images
+                        d_fake, _ = self.discriminator(fake_images, right_embeds)
+                        d_fake_loss = torch.mean(d_fake)
+
+                        # Compute losses for the generator and discriminator
+                        d_loss = d_real_loss - d_fake_loss
+                        g_loss = d_fake_loss
+
+
+                        val_loss_discr += d_loss.item()
+                        val_loss_gen += g_loss.item()
+
+                val_loss_gen /= len(val_dataloader)
+                val_loss_discr /= len(val_dataloader)
+
+                # Print validation loss
+                print(f"\t=> Validation Generator Loss: {val_loss_gen:.6f}")
+                print(f"\t=> Validation Discriminator Loss: {val_loss_discr:.6f}")
+
+            # Validation Part
+            Validation(val_dataloader)
             
             # Save the model checkpoints at the end of the epoch in the save_path 
-            # TODO:
             if save_path is not None:
                 save_obj = {}
                 save_obj['text_emb_model']=self.text_emb_model
                 save_obj['p_emb_dim']=self.p_emb_dim
                 save_obj['embedding_size']=self.embedding_size
 
-                save_obj["epoch"] = epoch+1
+                save_obj["epoch"] = starting_epoch+epoch+1
                 save_obj["total_steps"] = total_steps+1
                 save_obj["tr_loss_gen"] = epoch_loss_gen
                 save_obj["tr_loss_discr"] = epoch_loss_discr
@@ -293,64 +318,34 @@ class WGAN(object):
                 save_obj["discr_model_state_dict"] = self.discriminator.state_dict()
                 save_obj["discr_optimizer_state_dict"] = self.optimD.state_dict()
                     
-                torch.save(save_obj, os.path.join(save_path, f"{self.__class__.__name__}_epoch-{epoch+1}.pt"))
+                torch.save(save_obj, os.path.join(save_path, f"{self.__class__.__name__}_epoch-{starting_epoch+epoch+1}.pt"))
                 
-                    
-            # How Visualize the an image for each batch
-            #running_loss = 0.0
-            #for total_processed_batches, (images, captions, class_number) in enumerate(train_dataloader, 0):
                 
-            # take the first image of the batch 
-            #images = images[0]
-
-            # Get the images and captions and move them to the device
-            #images = images.to(self.device)
-            #captions = captions.to(self.device).squeeze(1)
-            
-            '''
-            print(type(images))
-            print(type(captions))
-            print(type(class_number))
-            
-            plt.figure(figsize=(6,6))
-            plt.imshow(transforms.ToPILImage()(images))
-            #plt.title(f"class: {class_number.numpy()}")    
-            #print(f"image caption: {captions}")
-            #plt.show()
-            '''
-            
-            #self.optimG.zero_grad()
-            #optimizer.zero_grad()   # Reset gradients
-                
-    # TODO: Implement prediction  
+    # Implement prediction  
     def predict(self, captions):
         """
-        Generates a fake image based on the given caption using the generator model.
+        Generates a fake images based on the given captions using the generator model.
 
         Parameters:
-            caption (str): The caption to generate the fake image from.
+            captions (str): The captions to generate the fake images from.
 
         Returns:
-            torch.Tensor: The generated fake image. The shape of the tensor is (3, H, W), where H and W are the height and width of the image. The values are in the range [0, 1].
+            torch.Tensor: The generated fake images. The shape of the tensor is (N, 3, H, W), 
+            where H and W are the height and width of the image. The values are in the range [0, 1].
+            N is the batch size 
         """
-        #self.generator.eval()
-        #self.text_emb_model.eval()
-        
+        self.generator.eval()
+        self.discriminator.eval()
+
         with torch.no_grad():
             
-            caption_embedding = self.text_emb_model.encode_text(captions).to(self.device)
-            
-            
-            z = torch.randn(16, self.noise_dim, 1, 1).to(
-                    self.device).float()
+            captions = captions.to(self.device)
+            captions_embeddings = self.text_emb_model.encode_text(captions).to(self.device).float()   
+            z = torch.randn(captions_embeddings.size(0), self.noise_dim, 1, 1).to(self.device).float()  
                 
-            fake_image = self.generator(caption_embedding.float(), z).cpu()
+            fake_images = self.generator(captions_embeddings, z)     
             
-            fake_image = (fake_image + 1) / 2
-            fake_image = fake_image.squeeze(0)
-            fake_image = fake_image.permute(1, 2, 0)
-            
-        return fake_image
+        return fake_images
                 
                 
         
