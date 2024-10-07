@@ -1,0 +1,84 @@
+\documentclass[twocolumn]{article} % A4 paper and 11pt font size
+
+\usepackage{lipsum} % Used for inserting dummy 'Lorem ipsum' text into the template
+\usepackage[english]{babel} % English language/hyphenation
+\usepackage[protrusion=true,expansion=true]{microtype} % Better typography
+\usepackage{amsmath,amsfonts,amsthm} % Math packages
+\usepackage[svgnames]{xcolor} % Enabling colors by their 'svgnames'
+\usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
+\usepackage{booktabs} % Horizontal rules in tables
+\usepackage{fix-cm} % Custom font sizes - used for the initial letter in the document
+\usepackage{float}
+\usepackage{bookmark}
+\usepackage{enumitem}
+\usepackage[parfill]{parskip}
+\usepackage{minted} 
+\usepackage{multicol}
+\usepackage{caption}
+\captionsetup{justification=raggedright}
+\usepackage{graphicx} % Package to insert images
+
+\usepackage{sectsty} % Enables custom section titles
+\allsectionsfont{\usefont{OT1}{phv}{b}{n}} % Change the font of all section commands
+
+\usepackage{fancyhdr} % Needed to define custom headers/footers
+\pagestyle{fancy} % Enables the custom headers/footers
+\usepackage{lastpage} % Used to determine the number of pages in the document (for Page X of Total)
+
+% Headers of all the pages - all currently empty
+\lhead{}
+\chead{}
+\rhead{}
+
+% Footers of all the pages
+% \lfoot{}
+\cfoot{\thepage}
+\rfoot{\footnotesize Page \thepage\ of \pageref{LastPage}} % Format for Footnote: Page 1 of 2
+\renewcommand{\headrulewidth}{0.0pt} % No header rule
+\renewcommand{\footrulewidth}{0.4pt} % Thin footer rule
+
+\usepackage{lettrine} % Package to accentuate the first letter of the text
+\newcommand{\initial}[1]{ % Defines the command and style for the first letter
+\lettrine[lines=3,lhang=0.3,nindent=0em]{
+\color{DarkGoldenrod}
+{\textsf{#1}}}{}}
+
+
+%----------------------------------------------------------------------------------------
+% TITLE SECTION
+%----------------------------------------------------------------------------------------
+
+\usepackage{titling} % Allows custom title configuration
+
+\pretitle{\vspace{-30pt} \begin{flushleft} \fontsize{35}{35} \usefont{OT1}{phv}{b}{n} \selectfont} % Horizontal rule before the title
+
+% Title here
+\title{Deep Learning - Generative Adversarial Text to Image Synthesis} 
+\posttitle{\par\end{flushleft}\vskip 2.0em} % Whitespace under the title
+\preauthor{\begin{flushleft}\large \lineskip 0.0em \usefont{OT1}{phv}{m}{sl} \color{Black}} % Author font configuration
+% Author here
+\author{Alex Valle (4854159)   Gabriele Berruti (4791919)}
+\postauthor{\footnotesize \lineskip 1em \usefont{OT1}{phv}{m}{sl} % Configuration for the institution name
+% Add other iformations here if needed
+\par\end{flushleft}} % Horizontal rule after the title
+\date{} % Add a date here
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+\maketitle % Print the title
+\thispagestyle{empty} % Enabling the custom headers/footers for the second page forward
+
+
+\input{content.tex}
+
+
+%----------------------------------------------------------------------------------------
+% REFERENCE LIST
+%----------------------------------------------------------------------------------------
+
+% \begin{thebibliography}{10} % 10 is a random guess of the total number of references
+% \bibitem{MG} Goossens, M., Mittelbach, F., Samarin, \emph{A LaTeX
+% Companion}, Addison-Wesley, Reading, MA, 1994.
+% \end{thebibliography}
+%----------------------------------------------------------------------------------------
+\end{document}
