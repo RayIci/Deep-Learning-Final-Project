@@ -3,11 +3,12 @@ import os
 import clip
 
 from gan_t2i.models.GAN_INT_CLS import GAN_INT_CLS
+from gan_t2i.models.GAN import WGAN
 from gan_t2i.datasets.DatasetFactory import DatasetFactory
 from gan_t2i.models.CLIP import CLIPModel
 from gan_t2i.utils.model_loading import download_CLIP_model, CLIP_DATASETS
 
-import torch 
+import torch
 from torch.utils.data import DataLoader, SubsetRandomSampler
 import torchvision.transforms as transforms
 
@@ -18,7 +19,7 @@ from PIL import Image
 transform_img = transforms.Compose([
     transforms.Resize(64, interpolation=Image.BICUBIC),
     transforms.CenterCrop(64),
-    transforms.ToTensor(),    
+    transforms.ToTensor(),
     transforms.Normalize([0.4355, 0.3777, 0.2879], [0.2571, 0.2028, 0.2101])
 ])
 
@@ -27,17 +28,17 @@ def tokenize_text(text):
     try:
         return clip.tokenize([text])[0]
     except:
-        return clip.tokenize([text.split(".")[0]])[0] 
+        return clip.tokenize([text.split(".")[0]])[0]
 
 
 # Load data
-data_path = os.path.join(os.getcwd(), "data") 
+data_path = os.path.join(os.getcwd(), "data")
 dataset = DatasetFactory.Flowers(data_path, transform_img=transform_img, transform_caption=tokenize_text)
 
 # Split data into train, validation and test
-train_size = int(0.05 * len(dataset))       
-val_size = int(0.02 * len(dataset))
-test_size = int(0.02 * len(dataset))
+train_size = int(0.7 * len(dataset))
+val_size = int(0.2 * len(dataset))
+test_size = int(0.1 * len(dataset))
 
 # Cration of train, validation and test set indices and samplers
 train_indices = list(range(train_size))
@@ -58,9 +59,10 @@ checkpoint_path = download_CLIP_model(CLIP_DATASETS.FLOWERS)
 clip_emb_model = CLIPModel.load(checkpoint_path)
 
 # Create the GAN-INT-CLS model
-gan = GAN_INT_CLS(
-    emb_network=clip_emb_model,
-    emb_dim=512
+gan = WGAN(
+    text_emb_model=clip_emb_model,
+    embedding_size=512,
+    p_emb_dim=128
 )
 
-gan.fit(train_loader, val_loader)
+gan.fit(train_loader, val_loader, 30, os.path.join(os.getcwd(), "checkpoints"))

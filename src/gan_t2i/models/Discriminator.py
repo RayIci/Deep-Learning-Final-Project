@@ -14,7 +14,6 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         # Initialize the image and channel parameters
-        self.image_size = 64
         self.num_channels = 3
         self.embed_dim = embedding_dim                   # dimension of the embedding coming from CLIP - 512
         self.projected_embed_dim = p_emb_dim             # dimension of the embedding to obtain - 128
@@ -56,7 +55,6 @@ class Discriminator(nn.Module):
 
             
             def forward(self, inp, embed):
-                
                 projected_embed = self.projection(embed)     
                 projected_embed = projected_embed.unsqueeze(2).unsqueeze(3)   
                 replicated_embed  = projected_embed.expand(-1, -1, inp.size(2), inp.size(3))   
