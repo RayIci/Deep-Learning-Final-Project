@@ -1,4 +1,0 @@
-services:
-  program:
-    build:
-      context: .
