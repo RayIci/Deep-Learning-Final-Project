@@ -106,7 +106,8 @@ class WGAN(object):
         loaded_model.discriminator.load_state_dict(checkpoint["discr_model_state_dict"])
         loaded_model.optimD.load_state_dict(checkpoint["discr_optimizer_state_dict"])
 
-        logger.info(f"Checkpoint loaded for epoch {checkpoint["epoch"]}.")
+        CURRENT_EPOCH = checkpoint["epoch"]
+        logger.info(f"Checkpoint loaded for epoch {CURRENT_EPOCH}.")
 
         return loaded_model
 
