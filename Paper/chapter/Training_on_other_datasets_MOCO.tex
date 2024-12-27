@@ -1,0 +1,39 @@
+\subsection*{Training on other dataset - MOCO}
+
+To demonstrate the generalization capability of 
+our approach, we trained a GAN-CLS model on the 
+MS-COCO dataset. 
+\\
+We have to underline that unlike CUB and Oxford-102, 
+MS-COCO features diverse images containing multiple 
+objects and 
+variable backgrounds. 
+\\
+Despite this complexity, we employed the same text encoder, GAN architecture, 
+and hyperparameters (learning rate, mini-batch size, and number of epochs) 
+used in the previous datasets. 
+\\
+The main difference lies in the text encoder training, as COCO lacks a single 
+object category per class, requiring an instance-level image and text matching approach.
+\\
+Figure 7 displays examples of generated images alongside their corresponding 
+ground-truth captions. 
+\\
+The results exhibit sharpness typical of GAN-based synthesis methods and 
+notable diversity in samples, 
+achieved by varying the noise vector while keeping the text embedding fixed.
+\\
+However, closer inspection reveals some limitations in scene coherence, 
+particularly in complex scenarios like human figures in baseball scenes, 
+where articulated parts are missing. 
+\\
+Future work could explore incorporating hierarchical structures into the 
+synthesis model to better handle multi-object scenes.
+\\
+Additionally, a qualitative comparison with AlignDRAW (Mansimov et al., 2016) 
+is provided in the supplement. 
+\\
+While GAN-CLS produces sharper and higher-resolution outputs roughly matching the query, 
+AlignDRAW better captures fine-grained single-word variations. 
+Extending the GAN-CLS generator network with temporal structures could improve
+its ability to handle nuanced text differences.

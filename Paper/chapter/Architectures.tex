@@ -1,0 +1,153 @@
+
+\section*{Architectures}
+
+\subsection*{(Vanilla GAN) :  Generative Adversarial Network without Conditional Latent Space }
+The Vanilla implementation stands for an implementation in which the Generator only depend 
+on the noise vector z and not depend on the Conditional Latent Space $ \varphi(t) $ and the same 
+stand for the discriminator which depends only on the actual or the generated image .
+
+\subsection*{(GAN-CLS) :  Generative Adversarial Network with Conditional Latent Space }
+The idea behind this architecture is to use $\varphi$ as Text Encoder (CLIP)
+to create the embeddings related to text description ${t}$ coeherent with the image (${x}$) 
+to obtain ${h}$ and one not correlated to the image sampled randomly $\hat{t}$ to obtain $\hat{h}$ .
+Another step is to generate the Noise Vector ${z}$ randomly sampled from a Gaussian 
+Distribution . \\
+The following step is to generate an image passing through ${z}$ and ${h}$ as explained 
+in the Generator Part and otbaining $\hat{x}$ .
+As well the Discriminator have to compute a value ${s_r}$ that correspond to 
+the loss passing through it the real image ${z}$ and the corresponding text 
+emdedding ${h}$ . \\
+In the same way we obtain ${s_r}$ passing at inference time 
+the image ${x}$ and $\hat{t}$ and we calculate 
+${s_f}$ passing the image ${x}$ and ${h}$ . 
+The Final part consist in computing the Discriminator loss $L_D$ as the 
+$\log(s_r) + \left(\log(1 - s_w) + \log(1 - s_f)\right) / 2$ . \\
+In the actual implementation the loss of the Discriminator is computed 
+using the BCELoss (Binary Cross Entroy Loss) between ${s_r}$ and a 
+"smoothed" version of the label filled with 1 computing "${d\_loss\_r}$" and again two times , first 
+with ${s_f}$ and a "fake label" filled with 0 computing "${d\_loss\_f}$" and after using 
+${s_f}$ and the "fake label" computing "${d\_loss\_f}$" . \\
+So the final value is computed summing the 3 obtained values :
+\[
+ L_D = d\_loss\_f + d\_loss\_w + d\_loss\_r
+\]
+After this computation the Discriminator is updated using backpropagtion 
+based on the gradient with $\alpha$ as parameter .
+
+For the Generator Loss $L_D$ we don't compute only the logarithm
+of ${s_f}$ (\ in Algorithm 1 )\ but we use a custom loss composed of 3 part .
+The first one compute the BCELoss between ${s_f}$ and the "real label" which is
+a vector filled with 1 . \\
+The second one compute the MSELoss (\ Mean Squared Error Loss )\ between 
+${q_r}$ (after Down-Sampling) and ${q_f}$ coming from the Discriminator of
+${s_r}$ and ${s_f}$ . \\
+The Third part is computed the L1Loss between the generated image $\hat{x}$
+and the real image ${x}$ .
+The 3 part are summed to obtain $L_G$
+\[
+ L_G = BCELoss( s_f,real\_label ) + MSELoss( q_r , q_f ) 
+\]
+\[
+ + L1Loss(\hat{x},x)
+\]
+And finally after this computation the Generator is updated using backpropagtion 
+based on the gradient with $\alpha$ as parameter .
+
+
+
+\begin{algorithm}
+    \caption{GAN-CLS training algorithm with step size $\alpha$, using minibatch SGD for simplicity.}
+    \begin{algorithmic}
+        \Require minibatch images $x$, minibatch matching text $t$, minibatch mis-matching text $\tilde{t}$, 
+        number of training batches $S$
+        \For{$n = 1$ to $S$}
+            \State $h \leftarrow \varphi(t)$ \hfill \{Encode matching description\}
+            \State $\hat{h} \leftarrow \varphi(\tilde{t})$ \hfill \{Encode mis-matching description\}\
+            \State $z \sim \mathcal{N}(0, 1)^Z$ \hfill \{Extract Noise Vector\}
+            \State $\hat{x} \leftarrow G(z, h)$ \hfill \{Forward through generator\}
+            \State $s_r \leftarrow D(x, h)$ \hfill \{Real image, right text\}
+            \State $s_w \leftarrow D(x, \hat{h})$ \hfill \{Real image, wrong text\}
+            \State $s_f \leftarrow D(\hat{x}, h)$ \hfill \{Fake image, right text\}
+            \State $L_D \leftarrow \log(s_r) + \left(\log(1 - s_w) + \log(1 - s_f)\right) / 2$
+            \State $D \leftarrow D - \alpha \nabla L_D$ \hfill \{Update discriminator\}
+            \State $L_G \leftarrow \log(s_f)$
+            \State $G \leftarrow G - \alpha \nabla L_G$ \hfill \{Update generator\}
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
+
+
+\subsection*{(GAN-INT) :  Generative Adversarial Network Interpolated}
+The main difference with respect with the previous implementation relies 
+in the fact that Generation of the "fake image" do not depend not anymore 
+only on z and t ,but in an interpolation of two different text emdeddings .
+In practice the paper found that fixing ${\beta}$ = 0.5 works well and want to
+underline that t1 and t2 may come from different images and 
+even different categories.
+This parte has not been implemented and tasted but with little modification
+on the actual code can be performed . 
+
+
+\begin{equation}
+    \mathbb{E}_{h1,h2 \sim p_{data} } [\log( 1 - D(G( z , \beta h1 + 
+    (1-\beta) h2 )))]
+\end{equation}
+
+\subsection*{- WGAN : - Wessertstain GAN}
+This typology of GAN is not present in the Paper but follow the same concept 
+described before . 
+In principle we can observe first all the algorithm :
+
+\begin{algorithm}
+    \caption{WGAN training algorithm with step size $\alpha$, using minibatch SGD for simplicity.}
+    \begin{algorithmic}
+        \Require minibatch images $x$, minibatch matching text $t$, minibatch mis-matching text $\tilde{t}$, 
+        number of training batches $S$ , number of iteraton for the Discriminator $NI$ 
+        \For{$n = 1$ to $S$}
+            \State $h \leftarrow \varphi(t)$ \hfill \{Encode matching description\}
+            
+            \For{$n = 1$ to $NI$}
+                \State $z \sim \mathcal{N}(0, 1)^Z$ \hfill \{Extract Noise Vector\}
+                \State $\hat{x} \leftarrow G(z, h)$ \hfill \{Forward through generator\}
+                \State $s_r \leftarrow D(x, h)$ \hfill \{Real image, right text\}
+                \State $s_f \leftarrow D(\hat{x}, h)$ \hfill \{Fake image, right text\}
+                \State $L_D \leftarrow (s_r) - (s_f) $
+                \State Clip weights of $D$ within $[-c, c]$
+                \State \{Lipschitz constraint\}
+            \EndFor
+            \State $z \sim \mathcal{N}(0, 1)^Z$ \hfill \{Extract again Noise Vector\}
+            \State $\hat{x} \leftarrow G(z, h)$ \hfill \{Forward through generator\}
+            \State $s_f \leftarrow D(\hat{x}, h)$ \hfill \{Fake image, right text\}
+            \State $L_G \leftarrow -(s_f) $ \hfill \{Wasserstein loss for Generator\}
+            \EndFor
+    \end{algorithmic}
+\end{algorithm}
+
+The idea behind this architecture is to use $\varphi$ as a Text Encoder to create embeddings 
+related to a text description $t$ that matches the image $x$, obtaining $h$. 
+This embedding $h$ serves as the condition for both the Generator and Discriminator. \\
+Another step involves sampling a Noise Vector $z$ randomly from 
+a Gaussian Distribution $\mathcal{N}(0, 1)^Z$. \\
+The following step is to generate a fake image $\hat{x}$ by passing $z$ 
+and $h$ through the Generator $G$. \\
+The Discriminator $D$ computes a score $s_r$ by passing the real image $x$ and 
+the corresponding text embedding $h$, which reflects how well $D$ recognizes 
+the real data. \\
+Similarly, the Discriminator computes a score $s_f$ by passing 
+the generated image $\hat{x}$ and the same text embedding $h$.\\
+The Discriminator loss $L_D$ is calculated as the difference $s_r - s_f$, which represents 
+the Wasserstein distance. To enforce the Lipschitz constraint, the weights of 
+the Discriminator are clipped within a fixed range $[-c, c]$ after every update. \\
+This ensures the Discriminator satisfies the required gradient properties for stable training.
+After training the Discriminator for multiple steps, the Generator is trained. \\
+A new Noise Vector $z$ is sampled from $\mathcal{N}(0, 1)^Z$, and a fake image $\hat{x}$ 
+is generated by passing $z$ and $h$ through $G$. \\
+The Discriminator then computes a new score $s_f$ for this generated image, 
+and the Generator loss $L_G$ is calculated as $-s_f$. \\
+This encourages the Generator to produce images that maximize the Discriminator's score, 
+effectively improving the quality of the generated images. \\
+The training process alternates between optimizing the Discriminator and the Generator. 
+Over multiple iterations, the Discriminator learns to distinguish real and fake images better, 
+while the Generator learns to produce more realistic images. \\
+This iterative process ensures that the Wasserstein distance between the real and generated 
+data distributions is minimized, leading to stable and efficient GAN training.

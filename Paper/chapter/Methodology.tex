@@ -1,0 +1,159 @@
+\section*{ Methodology }
+All the methods are based on a GAN architecture with a Generator G 
+and a Discriminator D . \\ 
+And use ($\varphi$) as Text Encoder that is a character-level convolutional-
+recurrent neural network .
+
+The generator is defined as :
+\[
+G : \mathbb{R}^Z \times \mathbb{R}^{T} \rightarrow \mathbb{R}^D,
+\]
+And the discriminator is defined as :  
+\[
+D : \mathbb{R}^D \times \mathbb{R}^{T} \rightarrow \{0, 1\},
+\]
+where 
+\begin{itemize}
+    \item ${D}$: is the dimension of the generated image
+    \item ${Z}$: is the dimension of the input noise 
+    \item ${T}$: is the dimension of the text emdedded with $\varphi$
+    \item ${D}$: is the dimension of the generated image
+\end{itemize}
+
+\subsection*{- Generator Part -}
+First of all the generated image is defined as :
+\[
+\hat{x} \leftarrow G(z, \varphi(t))
+\]
+This Generator take as input a noise vector of dimension Z 
+(In our implementation Z = 100) whose values are sampled from a Gaussian 
+distribution between 0 and 1
+\\
+\[
+z \in \mathbb{R}^Z \sim \mathcal{N}(0, 1)
+\]
+and the vector coming from the Text Encoder $\varphi$ for the specific 
+text description t obtaining $\varphi(t)$ .
+\\
+First part - Projection \\
+The first step of the Generator Net is to reduce the dimension of 
+$\varphi(t)$ using one fully-connected layer to project 
+to the dimension of the projection P . \\
+This part continue using a Normalization Layer (BatchNorm1d)
+and a Leaky-Relu as activation function with a specific negative slope .  
+So the values on the vector can be negative and positive depending on the 
+situation .
+
+In our implementation $\varphi$ correspond to CLIP while \\
+T is equal to 512 and \\
+P is equal to 128 \\
+After this first part an 128-dim vector is obtained and defined as :
+\[
+ p = projection( \varphi(t) )
+\]
+
+Second part - Concatanation \\
+To compose the Latent Space vector (LSV) the paper suggested to concatenate 
+the noise vector z with the projected vector p .
+
+In our specific implementation the latent space has a dimension of H (H=228)
+which is simple the concatation of the two vector of dimension T=100 
+and P=128 .
+
+\[
+h = concat( z , p )
+\]
+
+Third part - Final Net to generated the image 64x64 RGB 
+As input of the Final Net part of the Generator is the Latent Space Vector 
+(LSV) of dimension H (H=228). 
+
+This Final Net is composed of 4 set of layers in which the first one is a 
+Convolutional Transpose 2D Layers ( "to up-sample" ) followed by a Normalization layer 
+and Relu as activation function so we only have values greater than 0 .
+
+In our implementation the initial dimension of the vector was (228,1,1) but 
+after only the first Convolutional Transpose layer it is projected into an higher dimension of 
+(512,8,8) .
+
+After using the other 3 set of layers the dimension will be equal to (64,32,32) .
+The last layer is useful because permit to obtain an image of the shape 
+(3,64,64) and is composed of a Convolutional Transpose 2D Layer and Tanh as activation function .
+
+Using Tanh with in input values coming from the last layer that can be positive and 
+negative as well due to the weight of the 2D Convolutional Transpose Layer we will obtain an 
+image 64x64 with 3 channel RGB with values that ranges from -1 to 1 due to Tanh .
+\[
+\hat{x} = generate( h )
+\]
+And G is defined as this 3 Parts applied in order one after another  . 
+
+
+\subsection*{- Discriminator Part -}
+The Discriminator is defined as this :
+\[
+D ( \hat{x} , \varphi(t) ) = \left\{ x_i \in [0, 1] \mid i = 0, 1, \dots, 120 \right\}
+\]
+It takes in input the generated image $\hat{x}$ and depending
+on the situation an encoded version of the text description $\varphi(t)$
+related or not to image generated .
+
+Similarly to what we have seen in the Generator Part the Discriminator is 
+sub-divided in 3 Parts or Networks . 
+
+First Net - Down-Sampling 
+The First Part is composed of a several (in our implementation 4) set 
+of Convolutional 2D Layers ("to down-sample") 
+followed by a normalization Layer (BatchNorm2d except the first set)
+and Leaky-Relu as activation function . 
+After passing through this Net the generated image of a shape of (3,224,244)
+will have a dimension of (512,14,14) .
+\[
+ q = DownSampling( \hat{x} )
+\]
+
+Second Part - Projection Text Emdedding and Concatenation
+
+This part consist of two phases and it take as argument the down-sampled generated 
+image ${q}$ and the encoded version of the text description $\varphi(t)$ .
+The first phase consist in projecting $\varphi(t)$
+in a lower-dimension P (P=128) using one fully-connected layer and normalization layer 
+followed by a Leaky-Relu as activation function in the exact same way that we have done in 
+the Generator .
+After this first phase a 128-dim vector is obtained and defined as :
+\[
+ p = projection( \varphi(t) )
+\]
+The last task of the first phase was to adapt the project dimension of p 
+( that is (128,1,1) ) in such a way to be compatibile with the second phase 
+which concatenate p with q . 
+So the dimension of p is squeezed into a dimension that allow to concatenate
+the two data and it became (128,14,14)
+\[
+ \hat{p} = squeeze( p )
+\]
+
+The second Phase consist of the concatenation of $q$ and $\hat{p}$ 
+which result in a dimension of (512+128, 14, 14) = (256, 640, 14, 14)
+This concatation permit to obtain the Latent vector c :
+\[
+ c = concatenate( q , \hat{p} )
+\]
+
+
+Third Part - Final Net 
+This Final Net it's only composed of One Convolutional 2D Layer and 
+Sigmoid as activation function which map the input in a range that goes 
+from 0 to 1 .
+The first Convolution Layer modify the shape from (256, 640, 14, 14) 
+to (512,4,4) while the sigmoid function change its shape into
+( 1,11,11 ) .
+At the end of this phase we flatten the 11x11 values into a vector of 
+121-dimension .
+So at the end for each generated image and text Emdedding we obtain a 
+121-dim vector rappresenting the discriminator factors .
+\[
+ d\_loss = FinalNet( c )
+\]
+
+--------------------------

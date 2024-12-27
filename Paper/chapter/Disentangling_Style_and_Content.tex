@@ -1,0 +1,74 @@
+\subsection*{Disentangling Style and Content}
+
+This section explores the capability of the model 
+to separate style from content. 
+\\
+By \textit{content}, we refer to the intrinsic visual 
+characteristics of the bird, such as the shape, size, 
+and color of its body parts. 
+\textit{Style}, on the other hand, encompasses external 
+factors like background color and pose orientation.
+\\
+Since the text embedding primarily encodes content 
+information and usually excludes style details 
+(e.g., captions rarely describe background or pose), 
+the GAN must utilize the noise vector \(z\) 
+to account for variations in style. 
+\\
+To generate realistic images, the disentanglement 
+of these factors is crucial.
+\\
+To measure the extent of style-content disentanglement 
+on the CUB dataset, we defined two tasks: 
+\\
+pose verification and background color verification. 
+Each task required constructing pairs of similar and 
+dissimilar images. 
+Style vectors for these images were obtained by passing 
+them through a style encoder network, 
+trained to invert the generator's outputs back to the 
+noise vector \(z\). 
+\\
+If style and content are disentangled, images with similar 
+styles (e.g., same pose) should have higher similarity 
+scores than images with different styles 
+(e.g., different poses).
+\\
+To recover \(z\), we inverted the generator networks 
+following the procedure in Subsection 4.4. Verification 
+pairs were created by clustering images into 100 groups 
+using K-means. For background color verification, 
+clustering was performed based on the average RGB values 
+of the background. 
+\\
+For pose verification, clustering relied on six keypoint 
+coordinates (beak, belly, breast, crown, forehead, and tail).
+\\
+Evaluation was performed by calculating predicted style 
+vectors for image pairs using style encoders for GAN, 
+GAN-CLS, GAN-INT, and GAN-INT-CLS models. 
+\\
+Similarity scores were computed with cosine similarity, 
+and the AU-ROC metric was reported, averaged over five 
+folds. 
+\\
+As a baseline, cosine similarity between text features 
+from the text encoder was also calculated.
+\\
+The results, shown in Figure 5, confirm that 
+captions alone do not provide style-related information. 
+Consistent with qualitative observations, models 
+incorporating interpolation regularization 
+(GAN-INT and GAN-INT-CLS) achieved superior performance 
+for these tasks. \\
+Specifically:
+
+\begin{itemize}
+    \item \textbf{Pose Verification:} ROC curves demonstrate 
+    that style encoders effectively distinguish between 
+    similar and different poses.
+    \item \textbf{Background Color Verification:} ROC curves 
+    illustrate that models can separate images based 
+    on background color variations.
+\end{itemize}
+

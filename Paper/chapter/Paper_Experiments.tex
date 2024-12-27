@@ -1,0 +1,61 @@
+\section*{Experiments Are the experiments reproducible? What are the main insights from the experimental analysis?}
+
+\section*{Experiment conducted by the Paper}
+
+\subsection*{Datasets}
+
+\subsubsection*{CUB Dataset}
+The CUB dataset contains 11,788 bird images belonging to 200 distinct categories. 
+
+\subsubsection*{Oxford-102 Dataset}
+The Oxford-102 dataset consists of 8,189 flower images, grouped into 102 categories.
+
+\subsubsection*{Data Splits}
+For training and evaluation, datasets are split into class-disjoint subsets:  
+\begin{itemize}
+    \item \textbf{CUB:} 150 categories are used for training and validation, while the remaining 50 are used for testing.
+    \item \textbf{Oxford-102:} 82 categories are assigned to training and validation, and 20 categories are reserved for testing.
+\end{itemize}
+
+\subsubsection*{Captions}
+Each image in both datasets is accompanied by 5 captions. During training, a random image view (e.g., crop, flip) and one randomly selected caption are used for each mini-batch.
+
+\subsection*{Text Encoder}
+
+\subsubsection*{Encoder Architecture}
+The text encoder employs a deep convolutional-recurrent network, combining a character-level ConvNet with a recurrent neural network (char-CNN-RNN). This architecture generates 1,024-dimensional embeddings for textual descriptions.
+
+\subsubsection*{Text Embedding}
+Text captions are embedded into a 1,024-dimensional space via structured joint embedding with GoogLeNet features. 
+
+\subsubsection*{Pre-training}
+Pre-training the text encoder accelerates the training of the generator and discriminator, enabling faster experimentation. While pre-training is not a strict requirement, end-to-end training results are provided in the supplement for completeness.
+
+\subsubsection*{Generalization}
+Qualitative results from the MS COCO validation set illustrate the approach's ability to generalize beyond the datasets used in training.
+
+\subsection*{GAN Architecture}
+
+\subsubsection*{Training Image Size}
+All training images are resized to \(64 \times 64 \times 3\).
+
+\subsubsection*{Text Feature Projection}
+Text embeddings are projected to a 128-dimensional space before being concatenated with convolutional feature maps in both the generator and discriminator networks.
+
+\subsubsection*{Training Process}
+The generator and discriminator in the GAN-CLS architecture are updated 
+in alternating steps to optimize the GAN architecture.
+
+\subsubsection*{Hyperparameters}
+The following hyperparameters are used during training:
+\begin{itemize}
+    \item Base learning rate: 0.0002.
+    \item Optimizer: ADAM, with a momentum parameter of 0.5.
+    \item Generator noise: Sampled from a 100-dimensional unit normal distribution.
+    \item Mini-batch size: 64.
+    \item Number of epochs: 600.
+\end{itemize}
+
+\subsubsection*{Implementation}
+The implementation of the model is based on the \texttt{dcgan.torch2} 
+framework.

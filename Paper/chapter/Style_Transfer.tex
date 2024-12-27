@@ -1,0 +1,30 @@
+\subsection*{Generator Inversion for Style Transfer}
+
+The text encoding \(\varphi(t)\) represents the content of an image 
+(e.g., flower shape and colors). 
+To generate realistic images, the noise sample \(z\) should encode 
+style elements such as background color and pose. 
+Using a trained GAN, it becomes possible to transfer the style from 
+a query image to align with the content of a specific text description.
+
+This is achieved by training a convolutional network \(S\) to invert 
+the generator \(G\), allowing the recovery of \(z\) 
+from generated samples \(\hat{x} \leftarrow G(z, \varphi(t))\). 
+The style encoder \(S\) is trained using a simple squared loss function:
+
+\[
+\mathcal{L}_{\text{style}} = \mathbb{E}_{t, z \sim \mathcal{N}(0, 1)} \| z - S(G(z, \varphi(t))) \|_2^2 \tag{6}
+\]
+
+Here, \(S\) denotes the style encoder network.
+
+Once the generator and style encoder are trained, 
+the style from a query image \(x\) can be transferred to match a text 
+description \(t\) as follows:
+
+\[
+s \leftarrow S(x), \quad \hat{x} \leftarrow G(s, \varphi(t))
+\]
+
+In this process, \(s\) represents the extracted style, and \(\hat{x}\) 
+is the final image output.

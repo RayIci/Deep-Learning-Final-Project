@@ -1,0 +1,37 @@
+\section*{Paper Qualitative Results}
+
+\subsection*{Comparison of GAN Variants}
+
+We compare the following GAN architectures:  
+\begin{itemize}
+    \item \textbf{GAN Baseline:} The basic GAN model without any specific improvements for text-image matching.  
+    \item \textbf{GAN-CLS:} A GAN model incorporating an image-text matching discriminator .  
+    \item \textbf{GAN-INT:} A GAN variant utilizing text manifold interpolation
+    \item \textbf{GAN-INT-CLS:} A model combining both text manifold interpolation and the image-text matching discriminator.  
+\end{itemize}
+
+\subsection*{Results on the CUB Dataset}
+Qualitative results for the CUB dataset:  
+\begin{itemize}
+    \item The \textbf{GAN Baseline} and \textbf{GAN-CLS} models correctly reproduce some color information. However, the generated images do not appear realistic.  
+    \item \textbf{GAN-INT} and \textbf{GAN-INT-CLS} models produce plausible bird images that match either all or part of the captions.  
+    \item Additional robustness analysis for each GAN variant on the CUB dataset is provided in the supplement.  
+\end{itemize}
+
+\subsection*{Results on the Oxford-102 Dataset}
+Qualitative results for the Oxford-102 Flowers dataset are presented in Figure 4:  
+\begin{itemize}
+    \item All four models are capable of generating plausible flower images that align with their respective captions.  
+    \item The \textbf{GAN Baseline} exhibits the highest variety in flower morphology, especially when the caption does not specify petal types.  
+    \item Other models, such as \textbf{GAN-CLS}, \textbf{GAN-INT}, and \textbf{GAN-INT-CLS}, generate more class-consistent flower images.  
+    \item It is speculated that generating flowers is easier than birds 
+    due to structural regularities in bird species, making it simpler 
+    for the discriminator to identify fake birds compared to fake flowers.  
+\end{itemize}
+
+\subsection*{Additional Results}
+Supplementary materials include additional examples for the following:  
+\begin{itemize}
+    \item \textbf{GAN-INT} and \textbf{GAN-INT-CLS} models on both CUB and Oxford-102 datasets.  
+    \item \textbf{Vanilla GAN:} An end-to-end variant of GAN-INT-CLS that does not rely on pre-training the text encoder \(\phi(t)\).  
+\end{itemize}

@@ -1,0 +1,28 @@
+\subsection*{Pose and Background Style Transfer}
+
+GAN-INT-CLS, when combined with a trained style 
+encoder (as described in the Style Transfer 
+subsection), enables style transfer from an unseen query 
+image to a new text description. 
+\\
+Remarkably, this approach often retains intricate 
+background details, such as a tree branch on which 
+the bird is perched, showcasing the effectiveness
+of disentangling style and content.
+\\
+The ability of GAN-INT-CLS to disentangle style is 
+particularly noteworthy as it facilitates a 
+straightforward method of generalization. 
+\\
+By leveraging this disentanglement, the model can 
+combine previously observed content 
+(e.g., text descriptions) with previously seen styles 
+in novel pairings, thereby generating realistic 
+and plausible images that are entirely distinct from 
+those seen during training. 
+\\
+Another pathway for generalization involves utilizing 
+attributes present in the training data
+(e.g., "blue wings" and "yellow belly") to create new 
+combinations. 
+\\

@@ -1,0 +1,33 @@
+\section*{Sentence Interpolation}
+
+Although ground-truth text descriptions are not 
+available for the interpolated points, 
+the generated images appear visually coherent 
+and plausible. 
+\\
+By holding the noise distribution constant, 
+the only variable factor across each row is 
+the text embedding. 
+\\
+This approach allows interpolations to accurately 
+capture content-related changes, 
+such as a bird transitioning from blue to red, 
+while preserving consistent pose and background 
+elements.
+\\
+In addition to sentence interpolation, 
+Figure 8 (Right) presents results achieved 
+through noise interpolation. 
+\\
+In this case, two random noise vectors are sampled, 
+and by keeping the text embedding fixed, 
+we interpolate between these noise vectors. 
+\\
+The resulting images display a smooth style 
+transition while maintaining fixed content. 
+\\
+This demonstrates the model's ability to 
+disentangle style and content effectively, 
+enabling independent manipulation of each aspect 
+to produce seamless variations in generated 
+images.

@@ -1,0 +1,13 @@
+
+\section*{Current Paper innovation ? }
+Our technique differs from previous conditional GANs by focusing on text descriptions rather than class labels. 
+This is the first design capable of differentiating from character to pixel level. 
+The paper develop a manifold interpolation regularizer for the GAN generator, 
+which enhances sample quality, including "zero-shot" categories on CUB.
+It describes a model that generates 64x64 visually convincing pictures from text using a GAN. 
+It differs from other models that just employ GANs for post-processing.
+In practice it used a character-level text encoder and class-conditional GAN and 
+focus in implementing a new architecture ad using it on fine-grained  
+image datasets described before ( BUC and Oxford Flowers ) .
+Testing on MOCO dataset and test set disjoint from Training set 
+can return a strong indicator on the performance of the system .
