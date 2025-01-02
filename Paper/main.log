@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.10.7)  27 DEC 2024 17:50
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (MiKTeX 24.4) (preloaded format=pdflatex 2024.10.7)  2 JAN 2025 01:35
 entering extended mode
  \write18 enabled.
  file:line:error style messages enabled.
@@ -878,16 +878,11 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 [8]) (chapter/Paper_Experiments.tex
-Underfull \hbox (badness 2285) in paragraph at lines 1--1
-\OT1/phv/b/n/14.4 in-sights from the ex-per-i-men-tal
- []
-
-
 
 
 
 [9]
-Underfull \hbox (badness 6893) in paragraph at lines 54--55
+Underfull \hbox (badness 6893) in paragraph at lines 52--53
 []\OT1/cmr/m/n/10 (+20) Generator noise: Sam-pled from a 100-
  []
 
@@ -932,34 +927,76 @@ Underfull \hbox (badness 1888) in paragraph at lines 3--1
 
 
 ) (chapter/Code.tex
+Underfull \hbox (badness 10000) in paragraph at lines 3--48
+
+ []
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 
 [12]
-<./images/D_loss.png, id=144, 616.4631pt x 395.3169pt>
-File: ./images/D_loss.png Graphic file (type png)
-<use ./images/D_loss.png>
-Package pdftex.def Info: ./images/D_loss.png  used on input line 81.
-(pdftex.def)             Requested size: 227.62204pt x 145.96335pt.
-)
-Underfull \hbox (badness 1831) in paragraph at lines 3--95
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 48--48
+[][]\OT1/phv/b/n/14.4 WGAN on FASHION-MNIST
+ []
+
+
+Underfull \hbox (badness 1831) in paragraph at lines 49--65
 \OT1/cmr/m/n/10 (+20) We try also to con-duce some ex-per-i-ments on
  []
 
 
-Underfull \hbox (badness 5431) in paragraph at lines 3--95
+Underfull \hbox (badness 5431) in paragraph at lines 49--65
 \OT1/cmr/m/n/10 (+20) train-ing the Net ad-dress-ing the prob-lem to
  []
 
 
+Underfull \hbox (badness 10000) in paragraph at lines 49--65
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 66--72
+
+ []
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
 [13]
 
 
+Underfull \hbox (badness 10000) in paragraph at lines 123--148
 
-[14
+ []
 
- <./images/D_loss.png>] 
+
+
+[14]
+<./images/loss_D_G.png, id=163, 722.7pt x 433.62pt>
+File: ./images/loss_D_G.png Graphic file (type png)
+<use ./images/loss_D_G.png>
+Package pdftex.def Info: ./images/loss_D_G.png  used on input line 174.
+(pdftex.def)             Requested size: 227.62204pt x 136.57117pt.
+
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+
+
+<images/Epochs.png, id=165, 698.1282pt x 714.7503pt>
+File: images/Epochs.png Graphic file (type png)
+<use images/Epochs.png>
+Package pdftex.def Info: images/Epochs.png  used on input line 191.
+(pdftex.def)             Requested size: 187.59714pt x 192.05814pt.
+)
+
+[15 <./images/loss_D_G.png> <./images/Epochs.png>] 
 enddocument/afterlastpage: lastpage setting LastPage.
 (main.aux)
  ***********
@@ -968,17 +1005,17 @@ L3 programming layer <2024-05-27>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 20226 strings out of 473920
- 360013 string characters out of 5726974
+ 20246 strings out of 473920
+ 360346 string characters out of 5726974
  1947908 words of memory out of 5000000
- 42497 multiletter control sequences out of 15000+600000
+ 42506 multiletter control sequences out of 15000+600000
  576441 words of font info for 137 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  89i,12n,93p,1065b,634s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\gabri\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcrm1000.pk><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx9.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr5.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmti9.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvb8a.pfb><C:/Users/gabri/AppData/Local/Programs/MiKTeX/fonts/type1/urw/helvetic/uhvro8a.pfb>
-Output written on main.pdf (14 pages, 327289 bytes).
+Output written on main.pdf (15 pages, 367057 bytes).
 PDF statistics:
- 256 PDF objects out of 1000 (max. 8388607)
- 75 named destinations out of 1000 (max. 500000)
- 32267 words of extra memory for PDF output out of 35830 (max. 10000000)
+ 276 PDF objects out of 1000 (max. 8388607)
+ 86 named destinations out of 1000 (max. 500000)
+ 32272 words of extra memory for PDF output out of 35830 (max. 10000000)
 
