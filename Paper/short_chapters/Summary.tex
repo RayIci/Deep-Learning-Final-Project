@@ -1,0 +1,38 @@
+\section*{Summary}
+The first observation to make is that a longer version of this short report 
+has been drafted, which contains more details on the implementation and 
+theoretical aspects of the methods in the paper and also on our 
+implementation. \\
+The paper that has been chosen to be analysed is a 2016 Paper  
+that showcases the effort of six researchers from the University of 
+Michigan and Saarbrücken (Germany). 
+The document shows how the use of GANs (Generative Adversarial Networks) 
+allows for advancements in the generation of synthetic images starting 
+from a textual description. 
+It compares the method proposed by the research with previous architectures
+that, although far from the described goal, are capable of obtaining 
+valid textual feature representations. 
+In particular, the paper aims to demonstrate the effectiveness of 
+the model in generating images of birds and flowers based on a precise 
+textual description of them.
+In 2016, the ability of an AI system to generate realistic and 
+coherent images from textual descriptions 
+(such as "small red bird with a blue beak") was a current issue and 
+far from being achieved.
+It should be noted that it's necessary to use natural language 
+and domain-specific attributes to describe the image to be generated.
+\\
+The difficulty of translating words into images may be 
+divided into two subproblems.
+First, learn a feature vector from a specific text 
+based on the visualization we want to obtain .
+Given these features through the use of a certain architecture, 
+create a realistic and coherent image.
+This paper describes a GAN that creates 64x64 images from text descriptions, 
+utilizing a character-level encoder and a unique manifold interpolation regularizer 
+for fine-grained datasets such as CUB and Oxford Flowers.
+\\
+During our work, we attempted to reimplement the version proposed by the Paper in order 
+to determine its correctness and to be able to reapply it to different domains and tasks, 
+but unfortunately, it was not possible for the reasons described in the "Experiments" section, 
+while we successfully managed to implement a "toy" version with a different architecture.

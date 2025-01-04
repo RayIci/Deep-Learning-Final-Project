@@ -1,0 +1,241 @@
+\section*{ Methodologies }
+[ADD HERE DESCRIPTION OF THE SECTIONS Scrivi breve introduzione su come è 
+strutturata la parte di metodologia (esempio: In questa sezione trovate divisi per sezioni dataset, 
+gan, ..., etc... usati nel paper con qualche commento su come e cosa abbiamo cambiato nella nostra implementazione )]
+
+All the methods are based on a GAN architecture with a Generator G 
+and a Discriminator D . \\ 
+And use ($\varphi$) as Text Encoder that is a character-level convolutional-
+recurrent neural network .
+
+The generator is defined as :
+\[
+G : \mathbb{R}^Z \times \mathbb{R}^{T} \rightarrow \mathbb{R}^D,
+\]
+And the discriminator is defined as :  
+\[
+D : \mathbb{R}^D \times \mathbb{R}^{T} \rightarrow \{0, 1\},
+\]
+where 
+\begin{description}
+    \item[${D}$] is the dimension of the generated image
+    \item[${Z}$] is the dimension of the input noise
+    \item[${T}$] is the dimension of the text embedded with $\varphi$
+\end{description}
+
+
+\subsubsection*{Optimization Formula}
+The optimization objective is defined as:  
+\begin{equation}
+    \min_{G} \max_{D} V(D, G) = \mathbb{E}_{x \sim p_{\text{data}}(x)}[\log D(x)] 
+\end{equation}
+\[
++ \mathbb{E}_{z \sim p_z(z)}[\log(1 - D(G(z)))]
+\]
+\begin{description}
+    \item[$D(x)$] The Discriminator uses a Sigmoid activation function, mapping outputs to $[0, 1]$.
+    \item[$G(x)$] The Generator outputs data in $\mathbb{R}^D$.
+\end{description}
+
+
+The Discriminator is maximized to distinguish real from fake data, 
+while the Generator is minimized to make $G(z)$ indistinguishable from real data.  
+Maximizing $D$ involves maximizing $\log D(x)$ for real data and $\log(1 - D(G(z)))$ for generated data.  
+Alternatively, $G$ can also be optimized using $\log D(G(z))$ instead of $\log(1 - D(G(z)))$ to achieve the same result.
+
+
+\subsection*{Paper Datasets}
+All datasets share the following features: each image is paired with 5 text captions, 
+and during training, a random caption and an augmented version of the image (e.g., crop, flip) 
+are used for each mini-batch.
+
+\begin{description}
+    \item[\textbf{Caltech-UCSD Birds Dataset (CUB):}] 
+    Contains 11,788 images of birds across 200 categories. The dataset is split into 150 categories 
+    for training and validation, and 50 categories for testing.
+    
+    \item[\textbf{Oxford-102 Flowers Dataset:}] Includes 8,189 images of flowers grouped into 102 categories. 
+    The dataset is split into 82 categories for training and validation, and 20 categories for testing.
+    
+    \item[\textbf{MS COCO Dataset:}] Used for testing with a broader range of general images and text descriptions.
+\end{description}
+
+
+\subsection*{Text and Image Encoder}
+
+To encode textual descriptions and images, the original paper utilized a symmetric 
+architecture combining text and image representations, following the approach of Reed et al. (2006). 
+The dataset consists of $N$ samples, where each sample includes an image, 
+its text description, and its class label. 
+
+\paragraph{Encoders Overview}
+The image encoder is based on GoogLeNet, producing 1,024-dimensional embeddings, 
+while the text encoder employs a deep convolutional-recurrent architecture (char-CNN-RNN), 
+also generating 1,024-dimensional text embeddings. 
+These embeddings are mapped to a shared space, enabling 
+compatibility between textual and visual modalities.
+
+\paragraph{Training Objectives}
+The main goal is to ensure that text descriptions are most compatible with images from
+their respective classes. To achieve this, we compute the similarity between the 
+encoded version of the input image $v$ and the current text description $t$ 
+related to the current class $y$. The encoded versions, $\phi(v)$ and $\varphi(t)$, return vectors, 
+and the similarity is computed via their dot product, which returns a scalar. 
+This scalar represents how well the image and text description match. The goal is 
+to maximize the correlation between the image and the text of the same class, 
+ensuring that the image-text pairs that belong to the same class have the highest similarity.
+
+\paragraph{Loss Function}
+To optimize the encoders, a hinge loss or 0-1 loss function is used. 
+This loss function penalizes the similarity score between mismatched image-text pairs, 
+while encouraging high similarity scores for matching pairs. Specifically, 
+the loss function encourages the model to predict the correct class $y$ by minimizing the hinge loss, defined as:
+\[
+\Delta( y, f(x) ) = \max (0 , 1 - y * f(x) )
+\]
+
+where $f(x)$ is the classifier output for the given image or text input. 
+This results in a classification loss that forces the encoder to learn meaningful representations.
+
+\paragraph{Our Implementation Details}
+In our implementation, instead of using the original encoder described by Reed et al. (2006), 
+we used CLIP (Contrastive Language-Image Pre-Training), a model developed by OpenAI. 
+The CLIP model is pre-trained on large datasets and fine-tuned on the CUB and Oxford-102 
+datasets to generate relevant vector representations for both images and text descriptions. 
+Pretraining on large datasets accelerates the training process and improves the model's 
+ability to generalize across different domains. Fine-tuning on domain-specific datasets such 
+as CUB and Oxford-102 enhances the quality of the embeddings for the task at hand.
+
+
+\subsection*{Paper's Architectures and our}
+The GAN architecture used in the paper follows the implementation where all training images are resized 
+to $64 \times 64 \times 3$. 
+Text embeddings are projected into a 128-dimensional space and concatenated with convolutional feature 
+maps in both the generator and discriminator networks. 
+During training, the generator and discriminator are updated in alternating steps to optimize the model. 
+The hyperparameters used include a base learning rate of 0.0002, ADAM optimizer with a momentum parameter of 0.5, 
+generator noise sampled from a 100-dimensional unit normal distribution, a mini-batch size of 64, and 600 epochs. 
+The Paper implementation is based on the dcgan.torch2 framework.
+
+\subsubsection*{Vanilla GAN: Generative Adversarial Network without Conditional Latent Space}
+The Vanilla GAN consists of a Generator that only relies on the noise vector $z$ and a Discriminator 
+that evaluates whether the input image is real or generated, without any dependence on a conditional latent space.
+
+\subsubsection*{GAN-CLS: Generative Adversarial Network with Conditional Latent Space}
+GAN-CLS utilizes a text encoder, $\varphi$ (such as CLIP or GoogLeNet ), to create embeddings from text descriptions ${t}$ 
+that are related to images ${x}$, resulting in embeddings ${h}$ and $\hat{h}$ 
+for mismatched descriptions. 
+A random noise vector ${z}$ is sampled from a Gaussian distribution and passed 
+through the Generator to generate an image $\hat{x}$. 
+The Discriminator computes a score ${s_r}$ for the real image and its corresponding text embedding. 
+For a fake image, the Discriminator calculates ${s_f}$.\\ 
+The Discriminator loss $L_D$ is computed as:
+\[
+L_D = d\_loss\_f + d\_loss\_w + d\_loss\_r
+\]
+The Generator's loss, $L_G$, consists of three parts: BCELoss, MSELoss, and L1Loss, and is calculated as:
+\[
+L_G = BCELoss(s_f, \text{real\_label}) 
+\]
+\[
+  + MSELoss(q_r, q_f) + L1Loss(\hat{x}, x)
+\]
+The losses are backpropagated and the models are updated with the learning rate $\alpha$.
+
+\subsubsection*{GAN-INT: Generative Adversarial Network Interpolated}
+This architecture improves upon GAN-CLS by interpolating between two text embeddings. 
+The Generator is conditioned on the interpolated embeddings to generate more diverse images. 
+Although this modification has not been implemented yet, it can be added with minor adjustments.
+
+\[
+\mathbb{E}_{h1,h2 \sim p_{\text{data}} } [\log( 1 - D(G( z , \beta h1 + (1-\beta) h2 )))]
+\]
+
+\subsubsection*{WGAN: Wasserstein GAN - Our Architecture}
+WGAN introduces the Wasserstein distance to improve training stability. 
+The Discriminator computes the difference between real and fake scores, 
+and the Discriminator's weights are clipped to satisfy the Lipschitz constraint. 
+The Generator is trained to maximize the Discriminator's score. 
+The WGAN training steps are as follows:
+\begin{algorithm}
+    \caption{WGAN training algorithm with step size $\alpha$}
+    \begin{algorithmic}
+        \Require minibatch images $x$, matching text $t$, mis-matching text $\tilde{t}$, training batches $S$, Discriminator iterations $NI$
+        \For{$n = 1$ to $S$}
+            \State $h \leftarrow \varphi(t)$ \hfill \{Encode matching description\}
+            \For{$i = 1$ to $NI$}
+                \State $z \sim \mathcal{N}(0, 1)^Z$
+                \State $\hat{x} \leftarrow G(z, h)$
+                \State $s_r \leftarrow D(x, h)$
+                \State $s_f \leftarrow D(\hat{x}, h)$
+                \State $L_D \leftarrow s_r - s_f$
+                \State Clip weights of $D$ within $[-c, c]$
+            \EndFor
+            \State $L_G \leftarrow -s_f$
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
+\newpage
+The Wasserstein loss encourages the Generator to produce images 
+that the Discriminator cannot easily distinguish from real ones. 
+The iterative process ensures stable GAN training and minimizes 
+the Wasserstein distance between real and generated data distributions.
+
+
+\begin{comment}
+
+\subsubsection*{Generator Part}
+The Generator creates 64x64 RGB images from text descriptions and noise vectors. 
+It consists of three main steps:
+
+    \subparagraph{Projection}: 
+    The text embedding $\varphi(t)$ (encoded with CLIP) is reduced to a 128-dimensional vector $p$ using:
+    \begin{itemize}
+        \item A fully-connected layer,
+        \item BatchNorm,
+        \item Leaky-ReLU as activation function.
+    \end{itemize}
+
+    \subparagraph{Concatenation}: 
+    The noise vector $z$ (dimension 100) is concatenated with $p$, forming a latent vector $h$ (dimension 228).
+    
+    \subparagraph{Final Network}: The latent vector $h$ is processed through:
+    \begin{itemize}
+        \item Transpose convolutional layers to upscale dimensions,
+        \item Tanh activation function to normalize RGB values to $[-1, 1]$,
+    \end{itemize}
+    producing a 64x64 image.
+
+\subsubsection*{Discriminator Part}
+The Discriminator evaluates if a generated image $\hat{x}$ matches its corresponding text description $\varphi(t)$. It has three main steps:
+
+\begin{itemize}
+    \item \textbf{Down-Sampling}: The image is reduced using convolutional layers, producing a feature map $q$.
+    
+    \item \textbf{Text Projection \& Concatenation}:
+    \begin{itemize}
+        \item The text embedding $\varphi(t)$ is projected to a 128-dimensional vector $p$ via a fully-connected layer, reshaped to match $q$.
+        \item The reshaped ("squeezed") vector $\hat{p}$ is concatenated with $q$, forming a latent vector $c$.
+    \end{itemize}
+
+    \item \textbf{Final Network}: The latent vector $c$ is passed through:
+    \begin{itemize}
+        \item A convolutional layer,
+        \item Sigmoid activation function,
+    \end{itemize}
+    to output a 121-dimensional vector representing discriminator scores.
+\end{itemize}
+
+
+
+\paragraph{Shared Characteristics of the two Encoders and difference } 
+Both encoders map their inputs to a 1,024-dimensional vector space and
+the text encoder uses a combination of a convolutional neural network (CNN) and a recurrent neural network (RNN) 
+to capture semantic meaning from text.
+Furthermore , pretraining on large datasets speeds up convergence and improves generalization, 
+even to unseen datasets such as MS COCO.
+This approach highlights the value of using modern models like CLIP to replace traditional encoders, 
+achieving better generalization and performance across diverse image-text datasets.
+
+
+\end{comment}

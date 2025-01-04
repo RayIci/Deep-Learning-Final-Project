@@ -33,8 +33,7 @@ and when the argument tends to +$\infty$, the limit also tends to +$\infty$.
 \begin{itemize}
     \item $D(x)$: the Discriminator as output layer use the Sigmoid function which map the data in a
     range from 0 to 1 .
-    \item $G(x)$: the Generator instead as output layer use the Tanh function which map the data in a
-    range from -$\infty$ to $\infty$ .
+    \item $G(x)$: the Generator as output layer return a dimension equal to $\mathbb{R}^D$
 \end{itemize}
 
 Therefore, based on these outputs and the behavior of the log function, it is possible to understand why 
@@ -44,7 +43,7 @@ So in detail the log function of the first expected value must have as arguments
 (output of D), therefore the first part of the equation, trying to maximize D, sees mainly negative values and at 
 most equal to 0. \\
 At the same time, the second equation with the second expected value calculates the difference between [ 1 - D(G(z)) ] 
-, and since the argument of D tends to -infinity and we are simultaneously trying to maximize D and minimize G, 
+, and since the argument of D tends to $-\infty$ and we are simultaneously trying to maximize D and minimize G,   % errore
 the difference will result in a value between 0 and 1 (always positive).
 Therefore, the limit of the logarithm as it approaches 0 will be equal to -$\infty$, 
 while if the argument is 1, then the result is zero. \\
@@ -52,9 +51,7 @@ It's also possible to maximize G and use the log( [ D(G(z)) ] ) equation instead
 obtain the same result . 
 
 
-\subsection*{
-    Text Encoder and Image Encoder via CLIP
-}
+\subsection*{Text Encoder and Image Encoder}
 To obtain a vector representation of text descriptions the main paper used the approch 
 of Reed in 2006 using Deep convolutional and simmetric architecture based on both 
 images a its corresponding text description . \\
@@ -117,9 +114,11 @@ Hinge or 0-1 Loss in this case is:
 The main idea to compute the $\varphi_{loss}$ loss function was to learn the weights of 
 the Text Encoder ($\varphi$) and fine-tuning it on our dataset .
 
-During our implementation part this fine-tuning part has been done using 
-the CLIP (Contrastive Language-Image Pre-Training) Text Encoder on the 
-complete CUB and Flower dataset , in such a way to obtain 
-relevant vector rappresentation which is composed of values that ranges 
-from negative to positive values .
-
+\subsection*{Our implementation of Text/Image Encoding via CLIP}
+During our implementation part instead than using the Text Encoder used by 
+the Paper we decided to fine-tune the CLIP (Contrastive Language-Image Pre-Training , developed by OpenAI ) Text Encoder on the 
+complete CUB and Flower dataset for few epochs, in such a way to obtain 
+relevant vector rappresentation .
+%which is composed of values that ranges 
+%from negative to positive values .
+%CLIP is a modern way to obtain Text/Image feature Vector developed by OpenAI .

@@ -1,0 +1,31 @@
+
+\subsection*{Experiments and Paper Qualitative Results}
+
+The paper compares several GAN architectures: 
+the GAN Baseline, GAN-CLS, GAN-INT, and GAN-INT-CLS. 
+The GAN Baseline and GAN-CLS models correctly reproduce some color information, 
+but the generated images do not appear realistic. 
+The GAN-INT and GAN-INT-CLS models produce more plausible images that match all or part of the captions. 
+The results on the CUB dataset showed that GAN-INT and GAN-INT-CLS performed better in generating bird images 
+compared to GAN Baseline and GAN-CLS. 
+On the Oxford-102 Flowers dataset, all models generated plausible flower images that aligned with their captions. 
+The GAN Baseline model exhibited the highest variety in flower morphology, 
+particularly when the caption did not specify petal types. 
+However, models like GAN-CLS, GAN-INT, and GAN-INT-CLS generated more class-consistent flower images. 
+It was speculated that generating flowers is easier than birds due to structural regularities 
+in bird species, which make it easier for the discriminator to identify fake birds.
+The supplementary materials also provide additional results, 
+including examples for the GAN-INT and GAN-INT-CLS models on both the CUB and Oxford-102 datasets, 
+and the Vanilla GAN, an end-to-end variant of GAN-INT-CLS that does not rely on pre-training the text encoder.
+
+The GAN-CLS model was trained on the MS-COCO dataset, which features more complex images with multiple objects 
+and variable backgrounds. Despite the complexity, 
+the model showed sharpness and diversity, 
+but struggled with scene coherence in complex scenarios like human figures in baseball scenes. 
+A comparison with AlignDRAW revealed that GAN-CLS produced sharper, higher-resolution outputs, 
+while AlignDRAW captured finer variations in text.
+
+In conclusion, the model successfully generates images from detailed descriptions, 
+with manifold interpolation enhancing results. The approach also demonstrated the ability 
+to disentangle style and content and showed generalizability to more complex datasets like MS-COCO. 
+Future work will focus on improving resolution and handling more diverse text inputs.
